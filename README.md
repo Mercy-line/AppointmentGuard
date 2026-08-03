@@ -16,6 +16,7 @@
    - [Decision 5: Doctor Blackout Conflict Resolution (Patterns B & C)](#decision-5-doctor-blackout-conflict-resolution-patterns-b--c)
    - [Decision 6: Family Dependent Booking (Under-18 Minor Rule)](#decision-6-family-dependent-booking-under-18-minor-rule)
    - [Decision 7: Doctor-Initiated Cancellation & Patient Notification Dispatch](#decision-7-doctor-initiated-cancellation--patient-notification-dispatch)
+   - [Decision 8: Working Hours Shift Alterations & Conflict Auditing](#decision-8-working-hours-shift-alterations--conflict-auditing)
 5. [Enforced Business Rules & Constraints](#5-enforced-business-rules--constraints)
 6. [API Architecture & Endpoints](#6-api-architecture--endpoints)
 7. [Deployment & Containerization Architecture](#7-deployment--containerization-architecture)
@@ -24,7 +25,7 @@
 
 ## 1. System Design Overview
 
-AppointmentGuard provides a multi-doctor clinic booking platform (starting with 5 doctors and designed to scale to thousands of doctors and patients). The system enforces strict scheduling integrity, preventing double bookings, respecting working hours and doctor time-offs, supporting dependent minor bookings, and providing automated conflict resolution.
+AppointmentGuard provides a multi-doctor clinic booking platform (starting with 5 doctors and designed to scale to thousands of doctors and patients). The system enforces strict scheduling integrity, preventing double bookings, respecting working hours and doctor time-offs, supporting dependent minor bookings, and providing automated conflict resolution when working hours shift.
 
 ---
 
@@ -73,23 +74,13 @@ AppointmentGuard provides a multi-doctor clinic booking platform (starting with 
 
 ## 4. Key Engineering Decisions & Trade-Offs
 
-### Decision 6: Family Dependent Booking (Under-18 Minor Rule)
+### Decision 8: Working Hours Shift Alterations & Conflict Auditing
 
-* **The Requirement**: Can family members book appointments on behalf of relatives?
-* **Selected Business Policy**: Family members can book appointments **only for minor dependents under 18 years of age**. Adult patients (age $\ge 18$) must manage and book their own appointments to respect patient medical privacy.
-* **Implementation**:
-  - `CustomUser.date_of_birth` and `parent_guardian` relationship.
-  - `Appointment.booked_by` tracks the initiating guardian, while `Appointment.patient` tracks the target minor.
-  - Validation rule: If `booked_by != patient`, the system asserts `patient.is_minor()` and verifies guardian relationship.
-
----
-
-### Decision 7: Doctor-Initiated Cancellation & Patient Notification Dispatch
-
-* **The Feature**: When a doctor initiates an emergency cancellation or declares time-off, how are patients informed?
-* **Design**:
-  - Doctors can trigger cancellation with a mandatory reason (e.g. *"Emergency Surgery Duty"*).
-  - Setting `notification_sent = True` dispatches an automated notification flag to the patient's dashboard and communication queue, prompting immediate rescheduling.
+* **The Problem**: What happens to pre-existing active bookings if a doctor's shift schedule changes (e.g., shift end time shortened from 05:00 PM to 03:00 PM)?
+* **Selected Architecture**:
+  1. Future slot availability computation (`GET /doctors/{id}/availability/`) instantly adapts to the new shift boundaries (slots past 03:00 PM disappear for new bookings).
+  2. The system executes an atomic shift change audit (`audit_working_hours_shift_change`). Any existing active `BOOKED` appointment that falls outside the new shift bounds is automatically transitioned to `NEEDS_RESCHEDULE` with a reason string (*"Doctor Shift Schedule Change — Priority Reschedule Required"*).
+  3. Displays alert banners on both the Doctor Portal and Patient Dashboard alerting the patient to select a new slot.
 
 ---
 
@@ -101,5 +92,5 @@ AppointmentGuard provides a multi-doctor clinic booking platform (starting with 
 4. **Advance Notice Guarantee**: Appointments cannot be booked in the past and **must be booked at least 1 hour in advance** of current system time (`start_time >= now + 1 hour`).
 5. **No Overlapping Bookings**: A slot cannot overlap with any active `BOOKED` appointment for that doctor.
 6. **Time-Off Respect**: Slots overlapping with a `DoctorTimeOff` blackout window cannot be booked.
-7. **Minor Dependent Booking Rule**: Parents/guardians can book appointments on behalf of dependents under 18 years old. Adult patients must book their own appointments.
-8. **Doctor Cancellation & Notification**: Doctors can cancel appointments with a required reason, setting a notification flag to alert affected patients.
+7. **Minor Dependent Booking Rule**: Parents/guardians can book appointments on behalf of dependents under 18 years old.
+8. **Doctor Shift Change Audit**: When working hours change, conflicting pre-existing bookings are automatically flagged for priority rescheduling (`NEEDS_RESCHEDULE`).

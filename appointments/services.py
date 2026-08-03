@@ -84,6 +84,36 @@ def get_doctor_available_slots(doctor_id, target_date):
 
 
 @transaction.atomic
+def audit_working_hours_shift_change(doctor, day_of_week, new_start_time, new_end_time):
+    """
+    Audits existing active bookings when a doctor alters their working hours.
+    Flags any future active booking falling outside the new shift bounds with NEEDS_RESCHEDULE.
+    """
+    now = timezone.now()
+    future_appointments = Appointment.objects.filter(
+        doctor=doctor,
+        status=AppointmentStatus.BOOKED,
+        start_time__gte=now
+    )
+
+    flagged_count = 0
+    for appt in future_appointments:
+        if appt.start_time.weekday() == day_of_week:
+            appt_start = appt.start_time.time()
+            appt_end = appt.end_time.time()
+            
+            # Check if appointment falls outside new shift start or end time
+            if appt_start < new_start_time or appt_end > new_end_time:
+                appt.status = AppointmentStatus.NEEDS_RESCHEDULE
+                appt.cancellation_reason = "Doctor Shift Schedule Change — Priority Reschedule Required."
+                appt.notification_sent = True
+                appt.save()
+                flagged_count += 1
+
+    return flagged_count
+
+
+@transaction.atomic
 def create_doctor_time_off(doctor, start_datetime, end_datetime, reason):
     """
     Creates a DoctorTimeOff blackout window and flags any conflicting existing 
