@@ -18,6 +18,7 @@
    - [Decision 7: Doctor-Initiated Cancellation & Patient Notification Dispatch](#decision-7-doctor-initiated-cancellation--patient-notification-dispatch)
    - [Decision 8: Working Hours Shift Alterations & Conflict Auditing](#decision-8-working-hours-shift-alterations--conflict-auditing)
    - [Decision 9: Full-Day Doctor Cancellation & Bulk Conflict Resolution](#decision-9-full-day-doctor-cancellation--bulk-conflict-resolution)
+   - [Decision 10: Atomic Rescheduling & Rollback Protection](#decision-10-atomic-rescheduling--rollback-protection)
 5. [Enforced Business Rules & Constraints](#5-enforced-business-rules--constraints)
 6. [API Architecture & Endpoints](#6-api-architecture--endpoints)
 7. [Deployment & Containerization Architecture](#7-deployment--containerization-architecture)
@@ -26,7 +27,7 @@
 
 ## 1. System Design Overview
 
-AppointmentGuard provides a multi-doctor clinic booking platform (starting with 5 doctors and designed to scale to thousands of doctors and patients). The system enforces strict scheduling integrity, preventing double bookings, respecting working hours and doctor time-offs, supporting dependent minor bookings, and providing automated conflict resolution when working hours shift or full-day cancellations occur.
+AppointmentGuard provides a multi-doctor clinic booking platform (starting with 5 doctors and designed to scale to thousands of doctors and patients). The system enforces strict scheduling integrity, preventing double bookings, respecting working hours and doctor time-offs, supporting dependent minor bookings, and providing atomic rescheduling with zero-loss rollback protection.
 
 ---
 
@@ -75,14 +76,12 @@ AppointmentGuard provides a multi-doctor clinic booking platform (starting with 
 
 ## 4. Key Engineering Decisions & Trade-Offs
 
-### Decision 9: Full-Day Doctor Cancellation & Bulk Conflict Resolution
+### Decision 10: Atomic Rescheduling & Rollback Protection
 
-* **The Scenario**: What happens when a doctor cancels an entire day due to emergency leave or sickness?
+* **The Problem**: What happens if a patient attempts to reschedule to a new slot, but the new slot is claimed by another user mid-request? Does the patient risk losing their original slot?
 * **Selected Architecture**:
-  1. Doctor submits a `DoctorTimeOff` covering the full 24-hour window (`00:00:00` to `23:59:59 UTC`).
-  2. Slot availability generator (`GET /doctors/{id}/availability/`) instantly locks down the target date, returning zero available slots.
-  3. The system executes a bulk conflict resolution transaction (`create_doctor_time_off`), automatically transitioning all pre-existing active bookings for that day to `NEEDS_RESCHEDULE`.
-  4. Sets reason: *"Doctor Full-Day Absence — Priority Reschedule Required"*, sets `notification_sent = True`, and displays alert banners on both doctor and patient portals.
+  1. **Indivisible State Swap**: `reschedule_appointment` is wrapped in `@transaction.atomic` with pessimistic row locking (`SELECT ... FOR UPDATE`). Freeing the original slot and claiming the new slot happen in a single, indivisible database transaction block.
+  2. **Rollback Guarantee**: If the new slot fails validation (e.g. taken by another patient), a `ValidationError` triggers an automatic database `ROLLBACK`. The original slot remains 100% intact under the patient's name with zero risk of slot forfeiture or data corruption.
 
 ---
 
@@ -96,3 +95,4 @@ AppointmentGuard provides a multi-doctor clinic booking platform (starting with 
 6. **Time-Off Respect**: Slots overlapping with a `DoctorTimeOff` blackout window cannot be booked.
 7. **Minor Dependent Booking Rule**: Parents/guardians can book appointments on behalf of dependents under 18 years old.
 8. **Doctor Shift & Full-Day Cancellation Audit**: When working hours change or full-day blackouts occur, conflicting pre-existing bookings are automatically flagged for priority rescheduling (`NEEDS_RESCHEDULE`).
+9. **Atomic Reschedule & Rollback**: Rescheduling swaps slots atomically. New slot conflicts trigger an automatic transaction rollback, protecting original bookings against accidental forfeiture.
