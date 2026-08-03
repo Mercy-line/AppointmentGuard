@@ -44,7 +44,6 @@ class TestSlotAvailability:
     def test_get_available_slots_returns_correct_30_min_grid(self, setup_doctor_and_hours):
         doctor, target_date, _ = setup_doctor_and_hours
         slots = get_doctor_available_slots(doctor.id, target_date)
-        # Shift 09:00 to 17:00 = 8 hours = 16 slots of 30 mins
         assert len(slots) == 16
         assert slots[0]['duration_minutes'] == 30
 
@@ -69,7 +68,7 @@ class TestSlotAvailability:
 
     def test_get_available_slots_excludes_doctor_time_off(self, setup_doctor_and_hours):
         doctor, target_date, _ = setup_doctor_and_hours
-        
+
         to_start = timezone.make_aware(datetime.combine(target_date, time(10, 0)), dt_timezone.utc)
         to_end = timezone.make_aware(datetime.combine(target_date, time(11, 0)), dt_timezone.utc)
         DoctorTimeOff.objects.create(
@@ -86,7 +85,6 @@ class TestSlotAvailability:
         doctor, target_date, working_hours = setup_doctor_and_hours
         patient = User.objects.create_user(username='p_shift', email='pshift@test.com', password='Password123!')
 
-        # Book slot at 16:00 (4:00 PM)
         start_dt = timezone.make_aware(datetime.combine(target_date, time(16, 0)), dt_timezone.utc)
         end_dt = start_dt + timedelta(minutes=30)
         appt = Appointment.objects.create(
@@ -97,7 +95,6 @@ class TestSlotAvailability:
             status=AppointmentStatus.BOOKED
         )
 
-        # Doctor shortens shift to end at 15:00 (3:00 PM)
         flagged_count = audit_working_hours_shift_change(
             doctor=doctor,
             day_of_week=target_date.weekday(),

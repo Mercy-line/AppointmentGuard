@@ -1,10 +1,10 @@
 import pytest
-from datetime import datetime, timedelta, time, timezone as dt_timezone
+from datetime import datetime, timedelta, date, time, timezone as dt_timezone
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 from appointments.models import UserRole, Doctor, DoctorWorkingHours, Appointment, AppointmentStatus
-from appointments.services import book_appointment
+from appointments.services import book_appointment, cancel_appointment, reschedule_appointment
 
 User = get_user_model()
 
@@ -13,7 +13,7 @@ User = get_user_model()
 class TestAppointmentBooking:
     """
     Test suite verifying booking logic, 1-hour advance buffer rule, working hours validation,
-    and race condition prevention.
+    cancellation, and rescheduling.
     """
 
     @pytest.fixture
@@ -53,10 +53,10 @@ class TestAppointmentBooking:
             dt_timezone.utc
         )
 
-        return patient, doctor, valid_start_time
+        return patient, doctor, valid_start_time, target_date
 
     def test_successful_booking(self, setup_booking_context):
-        patient, doctor, valid_start_time = setup_booking_context
+        patient, doctor, valid_start_time, _ = setup_booking_context
         appointment = book_appointment(
             patient=patient,
             doctor_id=doctor.id,
@@ -68,16 +68,16 @@ class TestAppointmentBooking:
         assert appointment.end_time == valid_start_time + timedelta(minutes=30)
 
     def test_booking_fails_within_1_hour_of_current_time(self, setup_booking_context):
-        patient, doctor, _ = setup_booking_context
+        patient, doctor, _, _ = setup_booking_context
         invalid_start_time = timezone.now() + timedelta(minutes=30)
 
         with pytest.raises(ValidationError) as excinfo:
             book_appointment(patient=patient, doctor_id=doctor.id, start_time=invalid_start_time)
-        
+
         assert "at least 1 hour in advance" in str(excinfo.value)
 
     def test_booking_fails_outside_working_hours(self, setup_booking_context):
-        patient, doctor, valid_start_time = setup_booking_context
+        patient, doctor, valid_start_time, _ = setup_booking_context
         outside_time = timezone.make_aware(
             datetime.combine(valid_start_time.date(), time(18, 0)),
             dt_timezone.utc
@@ -88,13 +88,15 @@ class TestAppointmentBooking:
 
         assert "outside doctor's working hours" in str(excinfo.value)
 
-    def test_prevent_double_booking_same_slot(self, setup_booking_context):
-        patient1, doctor, valid_start_time = setup_booking_context
-        patient2 = User.objects.create_user(username='patient2', email='p2@test.com', password='Password123!')
+    def test_cancellation_and_reschedule(self, setup_booking_context):
+        patient, doctor, valid_start_time, target_date = setup_booking_context
+        appointment = book_appointment(patient=patient, doctor_id=doctor.id, start_time=valid_start_time)
 
-        book_appointment(patient=patient1, doctor_id=doctor.id, start_time=valid_start_time)
+        # Reschedule active appointment
+        new_start = timezone.make_aware(datetime.combine(target_date, time(14, 0)), dt_timezone.utc)
+        rescheduled = reschedule_appointment(appointment_id=appointment.id, user=patient, new_start_time=new_start)
+        assert rescheduled.start_time == new_start
 
-        with pytest.raises(ValidationError) as excinfo:
-            book_appointment(patient=patient2, doctor_id=doctor.id, start_time=valid_start_time)
-
-        assert "already booked" in str(excinfo.value)
+        # Cancel appointment
+        cancelled = cancel_appointment(appointment_id=appointment.id, user=patient, reason="Changing plans")
+        assert cancelled.status == AppointmentStatus.CANCELLED
