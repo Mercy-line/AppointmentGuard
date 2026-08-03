@@ -17,6 +17,8 @@
 5. [Enforced Business Rules & Constraints](#5-enforced-business-rules--constraints)
 6. [API Architecture & Endpoints](#6-api-architecture--endpoints)
 7. [Deployment & Containerization Architecture](#7-deployment--containerization-architecture)
+   - [CI/CD Pipeline Workflow](#cicd-pipeline-workflow)
+   - [Local Setup & Running via Docker](#local-setup--running-via-docker)
 
 ---
 
@@ -100,9 +102,8 @@ The database schema utilizes relational integrity, explicit foreign key relation
  +----------------------------------+            +--------------------+
  |  PostgreSQL Primary Database     |            | Redis Cache (Opt)  |
  |  - TIMESTAMPTZ storage           |            | - Rate limiting    |
- |  - Partial Unique Index          |            | - Session store    |
- |  - FOR UPDATE Row Locks          |            +--------------------+
- +----------------------------------+
+ |  - FOR UPDATE Row Locks          |            | - Session store    |
+ +----------------------------------+            +--------------------+
 ```
 
 ---
@@ -115,9 +116,9 @@ The database schema utilizes relational integrity, explicit foreign key relation
   1. *Pre-generated Slot Table*: Insert 30-minute rows for every doctor for months in advance into a `slots` table.
   2. *Dynamic Slot Generation* (**Selected**): Compute available slots on-the-fly given a target doctor and date.
 * **Reasoning**:
-  - Pre-generating slots creates database bloat (tens of thousands of empty slot rows per doctor per year) and requires complex cron background jobs to update when a doctor modifies their working hours.
+  - Pre-generating slots creates database bloat (tens of thousands of empty slot rows per doctor per year) and requires complex cron background jobs.
   - Dynamic generation computes valid 30-minute grid slots from `DoctorWorkingHours`, then subtracts existing `BOOKED` appointments and `DoctorTimeOff` intervals via optimized SQL queries.
-* **Trade-Off**: Higher CPU/SQL query work on slot availability retrieval (`GET /doctors/{id}/availability`), but zero database bloat and instant reflection of schedule/time-off changes.
+* **Trade-Off**: Higher CPU/SQL query work on slot availability retrieval, but zero database bloat and instant reflection of schedule/time-off changes.
 
 ---
 
@@ -127,11 +128,8 @@ The database schema utilizes relational integrity, explicit foreign key relation
   1. *Local Server Timezone Storage*.
   2. *UTC Storage with Client-Side Conversion* (**Selected**).
 * **Reasoning**:
-  - Clinic systems may serve patients or doctors across different timezones or handle daylight saving changes.
-  - Storing naive local datetimes causes ambiguity during timezone shifts.
-* **Implementation**:
-  - PostgreSQL column type: `TIMESTAMPTZ`.
-  - Django setting: `USE_TZ = True`, `TIME_ZONE = 'UTC'`.
+  - Clinic systems serve patients or doctors across different timezones or handle daylight saving changes.
+  - PostgreSQL column type: `TIMESTAMPTZ`. Django setting: `USE_TZ = True`, `TIME_ZONE = 'UTC'`.
   - API accepts and returns ISO 8601 strings with explicit UTC timezone markers (e.g., `2026-08-03T10:00:00Z`).
 
 ---
@@ -152,7 +150,7 @@ The database schema utilizes relational integrity, explicit foreign key relation
 * **Design**:
   - `DoctorWorkingHours` defines recurring availability per day of week (e.g. Mon–Fri 08:00–17:00).
   - `DoctorTimeOff` defines non-recurring blackout ranges (e.g., Aug 10, 10:00–14:00).
-  - Any 30-minute slot that overlaps with a `DoctorTimeOff` range or falls outside `DoctorWorkingHours` is automatically excluded.
+  - Any 30-minute slot overlapping a `DoctorTimeOff` range or falling outside `DoctorWorkingHours` is automatically excluded.
 
 ---
 
@@ -192,8 +190,41 @@ The database schema utilizes relational integrity, explicit foreign key relation
 
 ## 7. Deployment & Containerization Architecture
 
-- **Docker Multi-Stage Build**: Packaged using Docker, configured to run under a non-root dedicated user (`appuser`, UID 10001) for security compliance.
-- **CI/CD Pipeline Strategy**:
-  - `develop` branch: Triggers automated testing CI pipeline (Runs `flake8`, `pytest` suite, coverage checks).
-  - `production` branch: Triggers deployment to Cloud hosting upon passing tests.
-- **Secrets Management**: Sensitive environment keys (`SECRET_KEY`, `DATABASE_URL`) are injected via environment variables provided by GitHub Secrets.
+### CI/CD Pipeline Workflow
+
+The repository enforces a 2-branch automated deployment workflow using **GitHub Actions**:
+
+```
+ [Feature Branch] ---- (Pull Request) ----> [develop Branch]
+                                                |
+                                                v (Runs CI: flake8, pytest suite)
+                                                |
+                                       [Merge to production]
+                                                |
+                                                v (Runs CD: Docker build, Cloud Deploy)
+```
+
+1. **`develop` Branch (Continuous Integration)**:
+   - **Trigger**: Every Pull Request targeting `develop` or direct push to `develop`.
+   - **Actions**: Spawns a PostgreSQL 16 container, runs `flake8` linting, and executes the complete `pytest` test suite.
+2. **`production` Branch (Continuous Deployment)**:
+   - **Trigger**: Merging a verified PR into `production`.
+   - **Actions**: Runs pre-deploy test suite, builds multi-stage Docker container, verifies non-root execution (`appuser`, UID 10001), and triggers deployment webhook to Cloud hosting (Render / Fly.io / Railway).
+
+### Local Setup & Running via Docker
+
+```bash
+# 1. Clone repository and switch to develop branch
+git clone https://github.com/Mercy-line/AppointmentGuard.git
+cd AppointmentGuard
+git checkout develop
+
+# 2. Start services via Docker Compose
+docker compose up --build -d
+
+# 3. Apply database migrations and seed sample clinic data
+docker compose exec web python manage.py migrate
+docker compose exec web python manage.py seed_clinic_data
+
+# Access application in browser at http://localhost:8000
+```
