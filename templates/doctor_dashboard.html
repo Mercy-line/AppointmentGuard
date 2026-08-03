@@ -10,7 +10,7 @@
 
 {% if messages %}
     {% for msg in messages %}
-        <div class="card" style="margin-bottom: 1.5rem; background: #e0f2fe; color: #0369a1; border-color: #bae6fd;">
+        <div class="card" style="margin-bottom: 1.5rem; background: {% if 'warning' in msg.tags %}#fef3c7{% elif 'error' in msg.tags %}#fee2e2{% else %}#e0f2fe{% endif %}; color: {% if 'warning' in msg.tags %}#92400e{% elif 'error' in msg.tags %}#991b1b{% else %}#0369a1{% endif %}; border-color: var(--border-color);">
             {{ msg }}
         </div>
     {% endfor %}
@@ -19,23 +19,23 @@
 <div style="display: grid; grid-template-columns: 1fr 340px; gap: 2rem;">
     <div>
         <div class="card">
-            <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 1rem;">📅 Doctor Schedule & Bookings</h3>
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 1rem;">📅 Clinic Appointments & Schedules</h3>
             {% if appointments %}
                 <table style="width: 100%; border-collapse: collapse; text-align: left;">
                     <thead>
                         <tr style="border-bottom: 2px solid var(--border-color); font-size: 0.85rem; color: var(--text-muted);">
+                            <th style="padding: 0.75rem 0;">DOCTOR</th>
                             <th style="padding: 0.75rem 0;">PATIENT</th>
                             <th style="padding: 0.75rem 0;">START TIME (UTC)</th>
-                            <th style="padding: 0.75rem 0;">END TIME (UTC)</th>
                             <th style="padding: 0.75rem 0;">STATUS</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for appt in appointments %}
                             <tr style="border-bottom: 1px solid var(--border-color); font-size: 0.9rem;">
-                                <td style="padding: 0.85rem 0; font-weight: 600;">{{ appt.patient.get_full_name|default:appt.patient.username }}</td>
+                                <td style="padding: 0.85rem 0; font-weight: 700;">Dr. {{ appt.doctor.user.first_name|default:appt.doctor.user.username }}</td>
+                                <td style="padding: 0.85rem 0;">{{ appt.patient.get_full_name|default:appt.patient.username }}</td>
                                 <td style="padding: 0.85rem 0;">{{ appt.start_time|date:"Y-m-d H:i" }} UTC</td>
-                                <td style="padding: 0.85rem 0;">{{ appt.end_time|date:"Y-m-d H:i" }} UTC</td>
                                 <td style="padding: 0.85rem 0;"><span class="badge badge-{{ appt.status|lower }}">{{ appt.status }}</span></td>
                             </tr>
                         {% endfor %}
@@ -54,6 +54,14 @@
                 {% csrf_token %}
                 <div style="display: flex; flex-direction: column; gap: 1rem;">
                     <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+                        <label style="font-size: 0.85rem; font-weight: 600;">Select Doctor</label>
+                        <select name="doctor_id" class="form-control" required>
+                            {% for doc in doctors %}
+                                <option value="{{ doc.id }}">Dr. {{ doc.user.get_full_name|default:doc.user.username }} ({{ doc.specialization }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 0.35rem;">
                         <label style="font-size: 0.85rem; font-weight: 600;">Start Datetime (UTC)</label>
                         <input type="datetime-local" name="start_datetime" class="form-control" required>
                     </div>
@@ -63,7 +71,7 @@
                     </div>
                     <div style="display: flex; flex-direction: column; gap: 0.35rem;">
                         <label style="font-size: 0.85rem; font-weight: 600;">Reason</label>
-                        <input type="text" name="reason" class="form-control" placeholder="e.g. Emergency surgery" required>
+                        <input type="text" name="reason" class="form-control" placeholder="e.g. Emergency Department Duty" required>
                     </div>
                     <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">Save Time-Off</button>
                 </div>

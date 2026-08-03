@@ -46,18 +46,18 @@ def doctor_dashboard_view(request):
     """
     Doctor Portal View for inspecting appointments and declaring time-offs.
     """
-    if request.user.is_authenticated:
-        if hasattr(request.user, 'doctor_profile'):
-            doctor = request.user.doctor_profile
-            appointments = Appointment.objects.filter(doctor=doctor).select_related('patient').order_by('start_time')
-        else:
-            appointments = Appointment.objects.all().select_related('patient', 'doctor', 'doctor__user').order_by('start_time')
+    doctors = Doctor.objects.all().select_related('user')
+
+    if request.user.is_authenticated and hasattr(request.user, 'doctor_profile'):
+        doctor = request.user.doctor_profile
+        appointments = Appointment.objects.filter(doctor=doctor).select_related('patient', 'doctor', 'doctor__user').order_by('start_time')
     else:
         appointments = Appointment.objects.all().select_related('patient', 'doctor', 'doctor__user').order_by('start_time')
 
     needs_reschedule_count = appointments.filter(status=AppointmentStatus.NEEDS_RESCHEDULE).count()
 
     return render(request, 'doctor_dashboard.html', {
+        'doctors': doctors,
         'appointments': appointments,
         'needs_reschedule_count': needs_reschedule_count
     })
@@ -69,16 +69,19 @@ def add_doctor_time_off_view(request):
     Automatically flags conflicting existing bookings with NEEDS_RESCHEDULE (Patterns B & C).
     """
     if request.method == 'POST':
+        doctor_id = request.POST.get('doctor_id')
         start_str = request.POST.get('start_datetime')
         end_str = request.POST.get('end_datetime')
         reason = request.POST.get('reason', '')
 
-        if request.user.is_authenticated and hasattr(request.user, 'doctor_profile'):
-            doctor = request.user.doctor_profile
-        else:
-            doctor = Doctor.objects.first()
-
         try:
+            if doctor_id:
+                doctor = Doctor.objects.get(id=doctor_id)
+            elif request.user.is_authenticated and hasattr(request.user, 'doctor_profile'):
+                doctor = request.user.doctor_profile
+            else:
+                doctor = Doctor.objects.first()
+
             start_dt = timezone.make_aware(datetime.fromisoformat(start_str), timezone.utc)
             end_dt = timezone.make_aware(datetime.fromisoformat(end_str), timezone.utc)
 
@@ -92,7 +95,7 @@ def add_doctor_time_off_view(request):
             if flagged_count > 0:
                 messages.warning(request, f"Time-off created. ⚠️ {flagged_count} conflicting appointment(s) flagged as NEEDS_RESCHEDULE for patient notification.")
             else:
-                messages.success(request, "Time-off blackout period added successfully with zero appointment conflicts.")
+                messages.success(request, f"Time-off blackout created for {doctor}. Zero conflicts found.")
         except Exception as e:
             messages.error(request, f"Error creating time-off: {str(e)}")
 
