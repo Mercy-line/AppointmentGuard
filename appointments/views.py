@@ -1,12 +1,15 @@
-from datetime import datetime
+from datetime import datetime, timedelta
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.utils import timezone
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
-from rest_framework.exceptions import ValidationError as DRFValidationError
 
-from .models import Doctor, Appointment, CustomUser, AppointmentStatus
+from .models import Doctor, Appointment, CustomUser, AppointmentStatus, DoctorTimeOff
 from .serializers import (
     DoctorSerializer,
     AppointmentSerializer,
@@ -21,6 +24,99 @@ from .services import (
     reschedule_appointment
 )
 
+
+# ==========================================
+# UI Template Views
+# ==========================================
+
+def dashboard_view(request):
+    """
+    Main Clinic Appointment Scheduler Dashboard View.
+    """
+    doctors = Doctor.objects.filter(is_active=True).select_related('user')
+    default_date = timezone.now().strftime('%Y-%m-%d')
+    return render(request, 'dashboard.html', {
+        'doctors': doctors,
+        'default_date': default_date
+    })
+
+
+@login_required
+def doctor_dashboard_view(request):
+    """
+    Doctor Portal View for inspecting appointments and declaring time-offs.
+    """
+    appointments = []
+    if hasattr(request.user, 'doctor_profile'):
+        doctor = request.user.doctor_profile
+        appointments = Appointment.objects.filter(doctor=doctor).select_related('patient').order_by('start_time')
+    elif request.user.is_staff:
+        appointments = Appointment.objects.all().select_related('patient', 'doctor', 'doctor__user').order_by('start_time')
+
+    return render(request, 'doctor_dashboard.html', {
+        'appointments': appointments
+    })
+
+
+@login_required
+def add_doctor_time_off_view(request):
+    """
+    Form view for doctors to submit non-recurring blackout windows.
+    """
+    if request.method == 'POST':
+        if not hasattr(request.user, 'doctor_profile') and not request.user.is_staff:
+            messages.error(request, "Only doctors can add time-off.")
+            return redirect('appointments:doctor-dashboard')
+
+        doctor = request.user.doctor_profile
+        start_str = request.POST.get('start_datetime')
+        end_str = request.POST.get('end_datetime')
+        reason = request.POST.get('reason', '')
+
+        try:
+            start_dt = timezone.make_aware(datetime.fromisoformat(start_str), timezone.utc)
+            end_dt = timezone.make_aware(datetime.fromisoformat(end_str), timezone.utc)
+
+            time_off = DoctorTimeOff.objects.create(
+                doctor=doctor,
+                start_datetime=start_dt,
+                end_datetime=end_dt,
+                reason=reason
+            )
+            time_off.full_clean()
+            messages.success(request, "Time-off blackout period added successfully.")
+        except Exception as e:
+            messages.error(request, f"Error creating time-off: {str(e)}")
+
+    return redirect('appointments:doctor-dashboard')
+
+
+def login_view(request):
+    """
+    User Sign In view.
+    """
+    if request.method == 'POST':
+        u = request.POST.get('username')
+        p = request.POST.get('password')
+        user = authenticate(request, username=u, password=p)
+        if user:
+            login(request, user)
+            return redirect('appointments:dashboard')
+        return render(request, 'login.html', {'error': 'Invalid username or password.'})
+    return render(request, 'login.html')
+
+
+def logout_view(request):
+    """
+    User Sign Out view.
+    """
+    logout(request)
+    return redirect('appointments:dashboard')
+
+
+# ==========================================
+# REST API Endpoints
+# ==========================================
 
 class DoctorListAPIView(APIView):
     """
@@ -164,7 +260,6 @@ class PatientUpcomingAppointmentsAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, pk):
-        # Authorization check: user must be target patient, doctor, or staff
         if str(request.user.id) != str(pk) and not request.user.is_staff:
             return Response(
                 {'error': 'You do not have permission to view this patient\'s appointments.'},

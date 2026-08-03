@@ -1,0 +1,498 @@
+{% extends 'base.html' %}
+
+{% block title %}Patient Booking Dashboard — AppointmentGuard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-header {
+        margin-bottom: 2rem;
+    }
+    .dashboard-header h1 {
+        font-size: 1.85rem;
+        font-weight: 700;
+        color: var(--dark);
+    }
+    .dashboard-header p {
+        color: var(--text-muted);
+        margin-top: 0.25rem;
+    }
+
+    .grid-container {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: 2rem;
+    }
+
+    @media (max-width: 992px) {
+        .grid-container {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .controls-card {
+        display: flex;
+        gap: 1.5rem;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        flex: 1;
+        min-width: 200px;
+    }
+
+    .form-group label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-muted);
+    }
+
+    .form-control {
+        padding: 0.65rem 0.85rem;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-color);
+        font-size: 0.95rem;
+        outline: none;
+        transition: border 0.2s ease;
+    }
+
+    .form-control:focus {
+        border-color: var(--primary);
+    }
+
+    /* Slots Grid */
+    .slots-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        gap: 0.85rem;
+        margin-top: 1rem;
+    }
+
+    .slot-card {
+        background: var(--card-bg);
+        border: 1.5px solid #cbd5e1;
+        border-radius: var(--radius-md);
+        padding: 0.85rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .slot-card:hover {
+        border-color: var(--primary);
+        background: var(--primary-light);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
+    }
+
+    .slot-time {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--dark);
+    }
+
+    .slot-duration {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-top: 0.2rem;
+    }
+
+    .no-slots-alert {
+        padding: 2.5rem;
+        text-align: center;
+        background: #f8fafc;
+        border: 1.5px dashed var(--border-color);
+        border-radius: var(--radius-lg);
+        color: var(--text-muted);
+    }
+
+    /* Appointments List */
+    .appt-item {
+        border-bottom: 1px solid var(--border-color);
+        padding: 1rem 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .appt-item:last-child {
+        border-bottom: none;
+    }
+
+    .appt-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .appt-doc {
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: var(--dark);
+    }
+
+    .appt-time {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    .appt-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.25rem;
+    }
+
+    .toast {
+        padding: 0.85rem 1.25rem;
+        border-radius: var(--radius-md);
+        margin-bottom: 1.5rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        display: none;
+    }
+    .toast-success { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+    .toast-error { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>🗓️ Clinic Appointment Scheduler</h1>
+    <p>Select a doctor and date to view live available 30-minute booking slots.</p>
+</div>
+
+<div id="toastMessage" class="toast"></div>
+
+<div class="grid-container">
+    <!-- Main Booking Section -->
+    <div>
+        <div class="card controls-card">
+            <div class="form-group">
+                <label for="doctorSelect">Select Doctor</label>
+                <select id="doctorSelect" class="form-control" onchange="loadAvailableSlots()">
+                    {% for doc in doctors %}
+                        <option value="{{ doc.id }}">Dr. {{ doc.user.get_full_name|default:doc.user.username }} ({{ doc.specialization }})</option>
+                    {% empty %}
+                        <option value="">No doctors available</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="datePicker">Target Date</label>
+                <input type="date" id="datePicker" class="form-control" value="{{ default_date }}" onchange="loadAvailableSlots()">
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem;">Available 30-Min Slots</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">Slots are dynamically verified against working hours, time-offs, and advance notice rules.</p>
+            
+            <div id="slotsContainer" class="slots-grid">
+                <!-- Loaded via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Patient Appointments Sidebar -->
+    <div>
+        <div class="card">
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;">📋 Your Upcoming Appointments</h3>
+            <div id="patientAppointmentsContainer">
+                <p style="font-size: 0.85rem; color: var(--text-muted); text-align: center;">Loading appointments...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Booking Modal -->
+<div id="bookingModal" class="modal-overlay">
+    <div class="modal-card">
+        <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">Confirm Appointment Booking</h3>
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.5rem;">You are booking a 30-minute slot:</p>
+        
+        <div style="background: var(--body-bg); padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1.5rem;">
+            <p><strong>Doctor:</strong> <span id="modalDoctorName">--</span></p>
+            <p><strong>Slot Start (UTC):</strong> <span id="modalSlotTime">--</span></p>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+            <button class="btn btn-secondary" onclick="closeModal('bookingModal')">Cancel</button>
+            <button class="btn btn-primary" onclick="confirmBooking()">Confirm & Book</button>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Modal -->
+<div id="cancelModal" class="modal-overlay">
+    <div class="modal-card">
+        <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--danger);">Cancel Appointment</h3>
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">Please provide a cancellation reason. The slot will become bookable again immediately.</p>
+        
+        <input type="hidden" id="cancelApptId">
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label for="cancelReasonInput">Cancellation Reason</label>
+            <textarea id="cancelReasonInput" class="form-control" rows="3" placeholder="e.g. Schedule conflict, feeling unwell..."></textarea>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+            <button class="btn btn-secondary" onclick="closeModal('cancelModal')">Back</button>
+            <button class="btn btn-danger" onclick="confirmCancel()">Cancel Appointment</button>
+        </div>
+    </div>
+</div>
+
+<!-- Reschedule Modal -->
+<div id="rescheduleModal" class="modal-overlay">
+    <div class="modal-card">
+        <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">Reschedule Appointment</h3>
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">Select a new start datetime for your appointment:</p>
+        
+        <input type="hidden" id="rescheduleApptId">
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label for="rescheduleDateTimeInput">New ISO Start Datetime (UTC)</label>
+            <input type="datetime-local" id="rescheduleDateTimeInput" class="form-control">
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+            <button class="btn btn-secondary" onclick="closeModal('rescheduleModal')">Back</button>
+            <button class="btn btn-primary" onclick="confirmReschedule()">Submit Reschedule</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let selectedSlotIso = null;
+
+    function showToast(message, isError = false) {
+        const toast = document.getElementById('toastMessage');
+        toast.className = `toast ${isError ? 'toast-error' : 'toast-success'}`;
+        toast.innerText = message;
+        toast.style.display = 'block';
+        setTimeout(() => { toast.style.display = 'none'; }, 4000);
+    }
+
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+    async function loadAvailableSlots() {
+        const doctorId = document.getElementById('doctorSelect').value;
+        const date = document.getElementById('datePicker').value;
+        const container = document.getElementById('slotsContainer');
+
+        if (!doctorId) {
+            container.innerHTML = '<div class="no-slots-alert">No doctors available.</div>';
+            return;
+        }
+
+        container.innerHTML = '<div class="no-slots-alert">Loading available slots...</div>';
+
+        try {
+            const res = await fetch(`/api/doctors/${doctorId}/availability/?date=${date}`);
+            const data = await res.json();
+
+            if (res.ok) {
+                if (data.available_slots.length === 0) {
+                    container.innerHTML = '<div class="no-slots-alert">No available slots found for this date. (Doctor may be off or slots booked).</div>';
+                    return;
+                }
+
+                container.innerHTML = data.available_slots.map(s => {
+                    const dt = new Date(s.start_time);
+                    const timeStr = dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }) + ' UTC';
+                    return `
+                        <div class="slot-card" onclick="openBookingModal('${s.start_time}')">
+                            <div class="slot-time">${timeStr}</div>
+                            <div class="slot-duration">30 Minutes</div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                container.innerHTML = `<div class="no-slots-alert">${data.error || 'Failed to fetch slots'}</div>`;
+            }
+        } catch (e) {
+            container.innerHTML = `<div class="no-slots-alert">Error connecting to server.</div>`;
+        }
+    }
+
+    function openBookingModal(slotIso) {
+        selectedSlotIso = slotIso;
+        const docSelect = document.getElementById('doctorSelect');
+        document.getElementById('modalDoctorName').innerText = docSelect.options[docSelect.selectedIndex].text;
+        document.getElementById('modalSlotTime').innerText = new Date(slotIso).toUTCString();
+        openModal('bookingModal');
+    }
+
+    async function confirmBooking() {
+        const doctorId = document.getElementById('doctorSelect').value;
+
+        try {
+            const res = await fetch('/api/appointments/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    doctor_id: doctorId,
+                    start_time: selectedSlotIso
+                })
+            });
+
+            const data = await res.json();
+            closeModal('bookingModal');
+
+            if (res.status === 201) {
+                showToast('🎉 Appointment booked successfully!');
+                loadAvailableSlots();
+                loadPatientAppointments();
+            } else {
+                showToast(`❌ Booking Failed: ${data.error || 'Conflict/Error'}`, true);
+            }
+        } catch (e) {
+            showToast('❌ Network error during booking.', true);
+        }
+    }
+
+    async function loadPatientAppointments() {
+        const container = document.getElementById('patientAppointmentsContainer');
+        const currentUserId = "{{ user.id }}";
+
+        if (!currentUserId) {
+            container.innerHTML = '<p style="font-size: 0.85rem; color: var(--text-muted); text-align: center;">Log in as a patient to view your appointments.</p>';
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/patients/${currentUserId}/appointments/`);
+            const data = await res.json();
+
+            if (res.ok) {
+                if (data.appointments.length === 0) {
+                    container.innerHTML = '<p style="font-size: 0.85rem; color: var(--text-muted); text-align: center;">No upcoming appointments.</p>';
+                    return;
+                }
+
+                container.innerHTML = data.appointments.map(a => {
+                    const startDt = new Date(a.start_time).toLocaleString([], { dateStyle: 'short', timeStyle: 'short', timeZone: 'UTC' }) + ' UTC';
+                    return `
+                        <div class="appt-item">
+                            <div class="appt-header">
+                                <div class="appt-doc">Dr. ${a.doctor.user.first_name || a.doctor.user.username}</div>
+                                <span class="badge badge-${a.status.toLowerCase()}">${a.status}</span>
+                            </div>
+                            <div class="appt-time">📅 ${startDt}</div>
+                            ${a.status === 'BOOKED' ? `
+                                <div class="appt-actions">
+                                    <button class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;" onclick="promptReschedule('${a.id}')">Reschedule</button>
+                                    <button class="btn btn-danger" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;" onclick="promptCancel('${a.id}')">Cancel</button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                container.innerHTML = '<p style="font-size: 0.85rem; color: var(--danger); text-align: center;">Failed to load appointments.</p>';
+            }
+        } catch (e) {
+            container.innerHTML = '<p style="font-size: 0.85rem; color: var(--text-muted); text-align: center;">Login required.</p>';
+        }
+    }
+
+    function promptCancel(id) {
+        document.getElementById('cancelApptId').value = id;
+        openModal('cancelModal');
+    }
+
+    async function confirmCancel() {
+        const id = document.getElementById('cancelApptId').value;
+        const reason = document.getElementById('cancelReasonInput').value;
+
+        try {
+            const res = await fetch(`/api/appointments/${id}/cancel/`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ reason: reason })
+            });
+
+            const data = await res.json();
+            closeModal('cancelModal');
+
+            if (res.ok) {
+                showToast('Appointment cancelled successfully.');
+                loadAvailableSlots();
+                loadPatientAppointments();
+            } else {
+                showToast(`Cancellation failed: ${data.error}`, true);
+            }
+        } catch (e) {
+            showToast('Network error.', true);
+        }
+    }
+
+    function promptReschedule(id) {
+        document.getElementById('rescheduleApptId').value = id;
+        openModal('rescheduleModal');
+    }
+
+    async function confirmReschedule() {
+        const id = document.getElementById('rescheduleApptId').value;
+        const localDt = document.getElementById('rescheduleDateTimeInput').value;
+        if (!localDt) { showToast('Please pick a datetime', true); return; }
+
+        const isoDt = new Date(localDt).toISOString();
+
+        try {
+            const res = await fetch(`/api/appointments/${id}/reschedule/`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ new_start_time: isoDt })
+            });
+
+            const data = await res.json();
+            closeModal('rescheduleModal');
+
+            if (res.ok) {
+                showToast('Appointment rescheduled successfully!');
+                loadAvailableSlots();
+                loadPatientAppointments();
+            } else {
+                showToast(`Reschedule failed: ${data.error}`, true);
+            }
+        } catch (e) {
+            showToast('Network error.', true);
+        }
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadAvailableSlots();
+        loadPatientAppointments();
+    });
+</script>
+{% endblock %}

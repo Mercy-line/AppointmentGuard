@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Doctor Portal — AppointmentGuard{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+    <h1>🩺 Doctor Portal & Schedule Management</h1>
+    <p style="color: var(--text-muted);">Manage your 30-minute appointment schedule and declare non-recurring time-offs.</p>
+</div>
+
+{% if messages %}
+    {% for msg in messages %}
+        <div class="card" style="margin-bottom: 1.5rem; background: #e0f2fe; color: #0369a1; border-color: #bae6fd;">
+            {{ msg }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div style="display: grid; grid-template-columns: 1fr 340px; gap: 2rem;">
+    <div>
+        <div class="card">
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 1rem;">📅 Doctor Schedule & Bookings</h3>
+            {% if appointments %}
+                <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--border-color); font-size: 0.85rem; color: var(--text-muted);">
+                            <th style="padding: 0.75rem 0;">PATIENT</th>
+                            <th style="padding: 0.75rem 0;">START TIME (UTC)</th>
+                            <th style="padding: 0.75rem 0;">END TIME (UTC)</th>
+                            <th style="padding: 0.75rem 0;">STATUS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appt in appointments %}
+                            <tr style="border-bottom: 1px solid var(--border-color); font-size: 0.9rem;">
+                                <td style="padding: 0.85rem 0; font-weight: 600;">{{ appt.patient.get_full_name|default:appt.patient.username }}</td>
+                                <td style="padding: 0.85rem 0;">{{ appt.start_time|date:"Y-m-d H:i" }} UTC</td>
+                                <td style="padding: 0.85rem 0;">{{ appt.end_time|date:"Y-m-d H:i" }} UTC</td>
+                                <td style="padding: 0.85rem 0;"><span class="badge badge-{{ appt.status|lower }}">{{ appt.status }}</span></td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p style="color: var(--text-muted); text-align: center; padding: 2rem;">No appointments scheduled.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div>
+        <div class="card">
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;">🛑 Declare Time-Off / Blackout</h3>
+            <form method="POST" action="{% url 'appointments:add-time-off' %}">
+                {% csrf_token %}
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+                        <label style="font-size: 0.85rem; font-weight: 600;">Start Datetime (UTC)</label>
+                        <input type="datetime-local" name="start_datetime" class="form-control" required>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+                        <label style="font-size: 0.85rem; font-weight: 600;">End Datetime (UTC)</label>
+                        <input type="datetime-local" name="end_datetime" class="form-control" required>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+                        <label style="font-size: 0.85rem; font-weight: 600;">Reason</label>
+                        <input type="text" name="reason" class="form-control" placeholder="e.g. Emergency surgery" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">Save Time-Off</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
