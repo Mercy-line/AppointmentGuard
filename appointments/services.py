@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, time
+from datetime import datetime, timedelta, time, timezone as dt_timezone
 from django.db import transaction
 from django.utils import timezone
 from django.core.exceptions import ValidationError
@@ -8,31 +8,25 @@ from .models import Doctor, DoctorWorkingHours, DoctorTimeOff, Appointment, Appo
 def get_doctor_available_slots(doctor_id, target_date):
     """
     Computes all available 30-minute slots for a doctor on a given target date.
-    
-    Rules applied:
-    - Must fall strictly within DoctorWorkingHours for that day of week.
-    - Must not overlap with active BOOKED appointments.
-    - Must not overlap with DoctorTimeOff blackout windows.
-    - Must be at least 1 hour in advance of current system time.
     """
     try:
         doctor = Doctor.objects.get(id=doctor_id, is_active=True)
     except Doctor.DoesNotExist:
         raise ValidationError("Active doctor not found.")
 
-    day_of_week = target_date.weekday()  # 0=Monday, 6=Sunday
+    day_of_week = target_date.weekday()
     try:
         working_hours = DoctorWorkingHours.objects.get(doctor=doctor, day_of_week=day_of_week)
     except DoctorWorkingHours.DoesNotExist:
-        return []  # Doctor does not work on this day
+        return []
 
     shift_start = timezone.make_aware(
         datetime.combine(target_date, working_hours.start_time),
-        timezone.utc
+        dt_timezone.utc
     )
     shift_end = timezone.make_aware(
         datetime.combine(target_date, working_hours.end_time),
-        timezone.utc
+        dt_timezone.utc
     )
 
     slot_duration = timedelta(minutes=doctor.slot_duration_minutes)
@@ -134,7 +128,6 @@ def book_appointment(patient, doctor_id, start_time, booked_by=None):
     except Doctor.DoesNotExist:
         raise ValidationError("Target doctor does not exist or is inactive.")
 
-    # Dependent minor rule verification: If booking on behalf of another user
     if booked_by and booked_by != patient:
         if not patient.is_minor() and patient.parent_guardian != booked_by:
             raise ValidationError("Family members can only book appointments on behalf of minor dependents (under 18 years old).")
@@ -143,7 +136,7 @@ def book_appointment(patient, doctor_id, start_time, booked_by=None):
         raise ValidationError("Invalid datetime format.")
 
     if timezone.is_naive(start_time):
-        start_time = timezone.make_aware(start_time, timezone.utc)
+        start_time = timezone.make_aware(start_time, dt_timezone.utc)
 
     now = timezone.now()
     if start_time < now + timedelta(hours=1):
@@ -160,11 +153,11 @@ def book_appointment(patient, doctor_id, start_time, booked_by=None):
 
     shift_start = timezone.make_aware(
         datetime.combine(start_time.date(), working_hours.start_time),
-        timezone.utc
+        dt_timezone.utc
     )
     shift_end = timezone.make_aware(
         datetime.combine(start_time.date(), working_hours.end_time),
-        timezone.utc
+        dt_timezone.utc
     )
 
     if start_time < shift_start or end_time > shift_end:
@@ -225,7 +218,6 @@ def cancel_appointment(appointment_id, user, reason):
     appointment.status = AppointmentStatus.CANCELLED
     appointment.cancellation_reason = reason.strip()
 
-    # Trigger notification dispatch flag if doctor initiated cancellation
     if is_doctor or is_admin:
         appointment.notification_sent = True
 
@@ -260,7 +252,7 @@ def reschedule_appointment(appointment_id, user, new_start_time):
         raise ValidationError("Invalid datetime format.")
 
     if timezone.is_naive(new_start_time):
-        new_start_time = timezone.make_aware(new_start_time, timezone.utc)
+        new_start_time = timezone.make_aware(new_start_time, dt_timezone.utc)
 
     now = timezone.now()
     if new_start_time < now + timedelta(hours=1):
@@ -277,11 +269,11 @@ def reschedule_appointment(appointment_id, user, new_start_time):
 
     shift_start = timezone.make_aware(
         datetime.combine(new_start_time.date(), working_hours.start_time),
-        timezone.utc
+        dt_timezone.utc
     )
     shift_end = timezone.make_aware(
         datetime.combine(new_start_time.date(), working_hours.end_time),
-        timezone.utc
+        dt_timezone.utc
     )
 
     if new_start_time < shift_start or new_end_time > shift_end:

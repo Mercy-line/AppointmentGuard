@@ -1,5 +1,5 @@
 import pytest
-from datetime import datetime, timedelta, time
+from datetime import datetime, timedelta, time, timezone as dt_timezone
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
@@ -50,11 +50,11 @@ class TestAppointmentReschedule:
 
         original_start = timezone.make_aware(
             datetime.combine(target_date, time(10, 0)),
-            timezone.utc
+            dt_timezone.utc
         )
         new_start = timezone.make_aware(
             datetime.combine(target_date, time(14, 0)),
-            timezone.utc
+            dt_timezone.utc
         )
 
         appointment = book_appointment(
@@ -77,7 +77,6 @@ class TestAppointmentReschedule:
         assert rescheduled_appt.start_time == new_start
         assert rescheduled_appt.status == AppointmentStatus.BOOKED
 
-        # Verify availability: original 10:00 slot must now be available, and 14:00 slot must be taken
         available_slots = get_doctor_available_slots(doctor.id, target_date)
         slot_starts = [s['start_time'] for s in available_slots]
 
@@ -87,10 +86,8 @@ class TestAppointmentReschedule:
     def test_cannot_reschedule_cancelled_appointment(self, setup_reschedule_context):
         patient, _, appointment, _, _, new_start = setup_reschedule_context
 
-        # Cancel first
         cancel_appointment(appointment_id=appointment.id, user=patient, reason="Changing plans")
 
-        # Attempt to reschedule cancelled appointment
         with pytest.raises(ValidationError) as excinfo:
             reschedule_appointment(
                 appointment_id=appointment.id,
@@ -104,10 +101,8 @@ class TestAppointmentReschedule:
         patient, doctor, appointment, target_date, _, new_start = setup_reschedule_context
         patient2 = User.objects.create_user(username='p2_reschedule', email='p2r@test.com', password='Password123!')
 
-        # Patient 2 books the 14:00 slot first
         book_appointment(patient=patient2, doctor_id=doctor.id, start_time=new_start)
 
-        # Patient 1 attempts to reschedule their 10:00 appointment to 14:00
         with pytest.raises(ValidationError) as excinfo:
             reschedule_appointment(
                 appointment_id=appointment.id,

@@ -1,5 +1,5 @@
 import pytest
-from datetime import datetime, timedelta, time
+from datetime import datetime, timedelta, time, timezone as dt_timezone
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
@@ -50,7 +50,7 @@ class TestAppointmentBooking:
 
         valid_start_time = timezone.make_aware(
             datetime.combine(target_date, time(10, 0)),
-            timezone.utc
+            dt_timezone.utc
         )
 
         return patient, doctor, valid_start_time
@@ -69,7 +69,6 @@ class TestAppointmentBooking:
 
     def test_booking_fails_within_1_hour_of_current_time(self, setup_booking_context):
         patient, doctor, _ = setup_booking_context
-        # Start time set to 30 minutes from now (violates 1-hour minimum buffer rule)
         invalid_start_time = timezone.now() + timedelta(minutes=30)
 
         with pytest.raises(ValidationError) as excinfo:
@@ -79,10 +78,9 @@ class TestAppointmentBooking:
 
     def test_booking_fails_outside_working_hours(self, setup_booking_context):
         patient, doctor, valid_start_time = setup_booking_context
-        # 18:00 is outside 09:00 - 17:00 shift
         outside_time = timezone.make_aware(
             datetime.combine(valid_start_time.date(), time(18, 0)),
-            timezone.utc
+            dt_timezone.utc
         )
 
         with pytest.raises(ValidationError) as excinfo:
@@ -94,10 +92,8 @@ class TestAppointmentBooking:
         patient1, doctor, valid_start_time = setup_booking_context
         patient2 = User.objects.create_user(username='patient2', email='p2@test.com', password='Password123!')
 
-        # Patient 1 books first
         book_appointment(patient=patient1, doctor_id=doctor.id, start_time=valid_start_time)
 
-        # Patient 2 attempts to book the exact same slot
         with pytest.raises(ValidationError) as excinfo:
             book_appointment(patient=patient2, doctor_id=doctor.id, start_time=valid_start_time)
 

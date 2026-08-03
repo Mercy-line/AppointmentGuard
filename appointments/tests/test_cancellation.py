@@ -1,5 +1,5 @@
 import pytest
-from datetime import datetime, timedelta, time
+from datetime import datetime, timedelta, time, timezone as dt_timezone
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
@@ -50,7 +50,7 @@ class TestAppointmentCancellation:
 
         start_time = timezone.make_aware(
             datetime.combine(target_date, time(11, 0)),
-            timezone.utc
+            dt_timezone.utc
         )
 
         appointment = book_appointment(
@@ -64,7 +64,6 @@ class TestAppointmentCancellation:
     def test_successful_cancellation_frees_slot(self, setup_booked_appointment):
         patient, doctor, appointment, target_date, start_time = setup_booked_appointment
         
-        # Cancel appointment with reason
         reason = "Patient developed high fever and cannot travel."
         cancelled_appt = cancel_appointment(
             appointment_id=appointment.id,
@@ -75,18 +74,14 @@ class TestAppointmentCancellation:
         assert cancelled_appt.status == AppointmentStatus.CANCELLED
         assert cancelled_appt.cancellation_reason == reason
 
-        # Verify that the cancelled slot becomes available again in availability calculations
         available_slots = get_doctor_available_slots(doctor.id, target_date)
         slot_starts = [s['start_time'] for s in available_slots]
         assert start_time.isoformat() in slot_starts
 
     def test_cancellation_fails_if_already_cancelled(self, setup_booked_appointment):
         patient, _, appointment, _, _ = setup_booked_appointment
-        
-        # First cancellation succeeds
         cancel_appointment(appointment_id=appointment.id, user=patient, reason="Initial reason")
 
-        # Second cancellation attempt fails
         with pytest.raises(ValidationError) as excinfo:
             cancel_appointment(appointment_id=appointment.id, user=patient, reason="Second attempt")
 
