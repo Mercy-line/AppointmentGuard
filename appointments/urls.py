@@ -1,7 +1,31 @@
 from django.urls import path
+from .views import (
+    DoctorListAPIView,
+    DoctorAvailabilityAPIView,
+    BookAppointmentAPIView,
+    CancelAppointmentAPIView,
+    RescheduleAppointmentAPIView,
+    PatientUpcomingAppointmentsAPIView
+)
 
 app_name = 'appointments'
 
 urlpatterns = [
+    # Required Section 2 REST API Endpoints
+    path('doctors/', DoctorListAPIView.as_view(), name='doctor-list'),
+    path('doctors/<uuid:pk>/availability/', DoctorAvailabilityAPIView.as_view(), name='doctor-availability'),
+    path('appointments/', BookAppointmentAPIView.as_view(), name='book-appointment'),
+    path('appointments/<uuid:pk>/cancel/', CancelAppointmentAPIView.as_view(), name='cancel-appointment'),
+    path('appointments/<uuid:pk>/reschedule/', RescheduleAppointmentAPIView.as_view(), name='reschedule-appointment'),
     
+    # Bonus Endpoint
+    path('patients/<uuid:pk>/appointments/', PatientUpcomingAppointmentsAPIView.as_view(), name='patient-appointments'),
+
+    # API Alias Routes with /api/ prefix
+    path('api/doctors/', DoctorListAPIView.as_view(), name='api-doctor-list'),
+    path('api/doctors/<uuid:pk>/availability/', DoctorAvailabilityAPIView.as_view(), name='api-doctor-availability'),
+    path('api/appointments/', BookAppointmentAPIView.as_view(), name='api-book-appointment'),
+    path('api/appointments/<uuid:pk>/cancel/', CancelAppointmentAPIView.as_view(), name='api-cancel-appointment'),
+    path('api/appointments/<uuid:pk>/reschedule/', RescheduleAppointmentAPIView.as_view(), name='api-reschedule-appointment'),
+    path('api/patients/<uuid:pk>/appointments/', PatientUpcomingAppointmentsAPIView.as_view(), name='api-patient-appointments'),
 ]
