@@ -24,11 +24,11 @@ class Command(BaseCommand):
 
         # 5 Sample Doctors Data
         doctors_data = [
-            ("dr_alice", "Alice", "Wong", "dr.alice@clinic.com", "Cardiology"),
-            ("dr_bob", "Bob", "Smith", "dr.bob@clinic.com", "General Practice"),
-            ("dr_charlie", "Charlie", "Brown", "dr.charlie@clinic.com", "Pediatrics"),
-            ("dr_diana", "Diana", "Prince", "dr.diana@clinic.com", "Dermatology"),
-            ("dr_evan", "Evan", "Wright", "dr.evan@clinic.com", "Orthopedics"),
+            ("dr_alice", "Alice", "Cherop", "dr.alice@clinic.com", "Cardiology"),
+            ("dr_John", "John", "kimani", "dr.John@clinic.com", "General Practice"),
+            ("dr_charlie", "Charlie", "Onyancha", "dr.charlie@clinic.com", "Pediatrics"),
+            ("dr_diana", "Diana", "Atieno", "dr.diana@clinic.com", "Dermatology"),
+            ("dr_Evans", "Evans", "Muyoma", "dr.Evans@clinic.com", "Orthopedics"),
         ]
 
         for username, first_name, last_name, email, spec in doctors_data:

@@ -26,12 +26,12 @@ class TestAuthenticationAndRoles:
 
     def test_create_doctor_user_and_profile(self):
         doctor_user = User.objects.create_user(
-            username='dr_smith',
-            email='dr.smith@clinic.com',
+            username='dr_kimani',
+            email='dr.kimani@clinic.com',
             password='Password123!',
             role=UserRole.DOCTOR,
             first_name='John',
-            last_name='Smith'
+            last_name='kimani'
         )
         doctor_profile = Doctor.objects.create(
             user=doctor_user,
@@ -40,7 +40,7 @@ class TestAuthenticationAndRoles:
         )
         assert doctor_user.is_doctor() is True
         assert doctor_profile.user == doctor_user
-        assert str(doctor_profile) == "Dr. John Smith - Cardiology"
+        assert str(doctor_profile) == "Dr. John kimani - Cardiology"
 
     def test_admin_role_creation(self):
         admin_user = User.objects.create_superuser(
