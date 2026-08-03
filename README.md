@@ -17,6 +17,7 @@
    - [Decision 6: Family Dependent Booking (Under-18 Minor Rule)](#decision-6-family-dependent-booking-under-18-minor-rule)
    - [Decision 7: Doctor-Initiated Cancellation & Patient Notification Dispatch](#decision-7-doctor-initiated-cancellation--patient-notification-dispatch)
    - [Decision 8: Working Hours Shift Alterations & Conflict Auditing](#decision-8-working-hours-shift-alterations--conflict-auditing)
+   - [Decision 9: Full-Day Doctor Cancellation & Bulk Conflict Resolution](#decision-9-full-day-doctor-cancellation--bulk-conflict-resolution)
 5. [Enforced Business Rules & Constraints](#5-enforced-business-rules--constraints)
 6. [API Architecture & Endpoints](#6-api-architecture--endpoints)
 7. [Deployment & Containerization Architecture](#7-deployment--containerization-architecture)
@@ -25,7 +26,7 @@
 
 ## 1. System Design Overview
 
-AppointmentGuard provides a multi-doctor clinic booking platform (starting with 5 doctors and designed to scale to thousands of doctors and patients). The system enforces strict scheduling integrity, preventing double bookings, respecting working hours and doctor time-offs, supporting dependent minor bookings, and providing automated conflict resolution when working hours shift.
+AppointmentGuard provides a multi-doctor clinic booking platform (starting with 5 doctors and designed to scale to thousands of doctors and patients). The system enforces strict scheduling integrity, preventing double bookings, respecting working hours and doctor time-offs, supporting dependent minor bookings, and providing automated conflict resolution when working hours shift or full-day cancellations occur.
 
 ---
 
@@ -74,13 +75,14 @@ AppointmentGuard provides a multi-doctor clinic booking platform (starting with 
 
 ## 4. Key Engineering Decisions & Trade-Offs
 
-### Decision 8: Working Hours Shift Alterations & Conflict Auditing
+### Decision 9: Full-Day Doctor Cancellation & Bulk Conflict Resolution
 
-* **The Problem**: What happens to pre-existing active bookings if a doctor's shift schedule changes (e.g., shift end time shortened from 05:00 PM to 03:00 PM)?
+* **The Scenario**: What happens when a doctor cancels an entire day due to emergency leave or sickness?
 * **Selected Architecture**:
-  1. Future slot availability computation (`GET /doctors/{id}/availability/`) instantly adapts to the new shift boundaries (slots past 03:00 PM disappear for new bookings).
-  2. The system executes an atomic shift change audit (`audit_working_hours_shift_change`). Any existing active `BOOKED` appointment that falls outside the new shift bounds is automatically transitioned to `NEEDS_RESCHEDULE` with a reason string (*"Doctor Shift Schedule Change — Priority Reschedule Required"*).
-  3. Displays alert banners on both the Doctor Portal and Patient Dashboard alerting the patient to select a new slot.
+  1. Doctor submits a `DoctorTimeOff` covering the full 24-hour window (`00:00:00` to `23:59:59 UTC`).
+  2. Slot availability generator (`GET /doctors/{id}/availability/`) instantly locks down the target date, returning zero available slots.
+  3. The system executes a bulk conflict resolution transaction (`create_doctor_time_off`), automatically transitioning all pre-existing active bookings for that day to `NEEDS_RESCHEDULE`.
+  4. Sets reason: *"Doctor Full-Day Absence — Priority Reschedule Required"*, sets `notification_sent = True`, and displays alert banners on both doctor and patient portals.
 
 ---
 
@@ -93,4 +95,4 @@ AppointmentGuard provides a multi-doctor clinic booking platform (starting with 
 5. **No Overlapping Bookings**: A slot cannot overlap with any active `BOOKED` appointment for that doctor.
 6. **Time-Off Respect**: Slots overlapping with a `DoctorTimeOff` blackout window cannot be booked.
 7. **Minor Dependent Booking Rule**: Parents/guardians can book appointments on behalf of dependents under 18 years old.
-8. **Doctor Shift Change Audit**: When working hours change, conflicting pre-existing bookings are automatically flagged for priority rescheduling (`NEEDS_RESCHEDULE`).
+8. **Doctor Shift & Full-Day Cancellation Audit**: When working hours change or full-day blackouts occur, conflicting pre-existing bookings are automatically flagged for priority rescheduling (`NEEDS_RESCHEDULE`).
