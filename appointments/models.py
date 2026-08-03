@@ -135,6 +135,7 @@ class DoctorTimeOff(models.Model):
 class AppointmentStatus(models.TextChoices):
     BOOKED = 'BOOKED', 'Booked'
     CANCELLED = 'CANCELLED', 'Cancelled'
+    NEEDS_RESCHEDULE = 'NEEDS_RESCHEDULE', 'Needs Reschedule'
 
 
 class Appointment(models.Model):

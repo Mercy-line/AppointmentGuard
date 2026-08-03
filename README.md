@@ -1,226 +1,199 @@
-# 🛡️ AppointmentGuard — Clinic Booking System & Architecture
+# 🛡️ AppointmentGuard — System Design & Architecture
 
-> **AppointmentGuard** is a robust, scalable, and concurrency-safe clinic appointment booking platform built with Django, Django REST Framework, PostgreSQL, Docker, and GitHub Actions.
+> **AppointmentGuard** is a robust, concurrent, and scalable clinic appointment booking system built with Django, Django REST Framework (DRF), and PostgreSQL.
 
 ---
 
 ## 📌 Table of Contents
-1. [Section 1: System Design & Architecture](#section-1-system-design--architecture)
-   - [Domain Model & Entity Relationships](#domain-model--entity-relationships)
-   - [Fixed Grid vs. Flexible Slot Architecture](#fixed-grid-vs-flexible-slot-architecture)
-   - [Universal Timezone Architecture (UTC)](#universal-timezone-architecture-utc)
-   - [Concurrency Control & Race Condition Prevention (`select_for_update`)](#concurrency-control--race-condition-prevention-select_for_update)
-   - [Doctor Time-Offs, Working Hours & Blackouts](#doctor-time-offs-working-hours--blackouts)
-   - [Authentication & Authorization (RBAC)](#authentication--authorization-rbac)
-   - [Scalability & Future Growth Strategy](#scalability--future-growth-strategy)
-2. [Section 2: API & Architecture Specification](#section-2-api--architecture-specification)
-3. [Section 3: CI/CD & Deployment Plan](#section-3-cicd--deployment-plan)
-4. [Section 4: AI Reflection](#section-4-ai-reflection)
+1. [System Design Overview](#1-system-design-overview)
+2. [Domain Models & Data Architecture](#2-domain-models--data-architecture)
+3. [System Components & High-Level Architecture](#3-system-components--high-level-architecture)
+4. [Key Engineering Decisions & Trade-Offs](#4-key-engineering-decisions--trade-offs)
+   - [Decision 1: Dynamic Slot Generation vs. Stored Slot Records](#decision-1-dynamic-slot-generation-vs-stored-slot-records)
+   - [Decision 2: Universal Timezone Standard (UTC)](#decision-2-universal-timezone-standard-utc)
+   - [Decision 3: Race Condition Prevention (`select_for_update` vs. Unique Constraints)](#decision-3-race-condition-prevention-select_for_update-vs-unique-constraints)
+   - [Decision 4: Doctor Working Hours & Time-Off Overrides](#decision-4-doctor-working-hours--time-off-overrides)
+   - [Decision 5: Doctor Blackout Conflict Resolution (Patterns B & C)](#decision-5-doctor-blackout-conflict-resolution-patterns-b--c)
+5. [Enforced Business Rules & Constraints](#5-enforced-business-rules--constraints)
+6. [API Architecture & Endpoints](#6-api-architecture--endpoints)
+7. [Deployment & Containerization Architecture](#7-deployment--containerization-architecture)
 
 ---
 
-## Section 1: System Design & Architecture
+## 1. System Design Overview
 
-### 🏥 The Scenario
-A growing clinic with 5 doctors needs a web system where patients can view available 30-minute appointment slots, book them, reschedule, or cancel them. The system must enforce business rules (no double bookings, no past bookings, minimum 1-hour advance booking, respect working hours and doctor time-offs) while ensuring race-condition prevention when concurrent patients try to book the same slot.
+AppointmentGuard provides a multi-doctor clinic booking platform (starting with 5 doctors and designed to scale to thousands of doctors and patients). The system enforces strict scheduling integrity, preventing double bookings, respecting working hours and doctor time-offs, and supporting time-zone independent appointment management.
 
 ---
 
-### Domain Model & Entity Relationships
+## 2. Domain Models & Data Architecture
+
+The database schema utilizes relational integrity, explicit foreign key relationships, database constraints, and timezone-aware timestamps (`TIMESTAMPTZ` in PostgreSQL).
 
 ```
  +-------------------------------------------------------+
- |                     User / CustomUser                  |
- |-------------------------------------------------------|
- | - id: UUID / BigInt (PK)                             |
- | - email: String (Unique)                              |
- | - role: Enum ('PATIENT', 'DOCTOR', 'ADMIN')           |
- | - first_name, last_name, timezone: String             |
- +-------------------------------------------------------+
-               | (1:1 for Doctor details)
-               v
- +-------------------------------------------------------+
- |                        Doctor                         |
+ |                     User (CustomUser)                 |
  |-------------------------------------------------------|
  | - id: UUID (PK)                                       |
- | - user: OneToOne(User)                                |
- | - specialization: String                              |
- | - slot_duration_minutes: Integer (Default: 30)        |
- | - is_active: Boolean                                  |
+ | - email: String (Unique, Indexed)                     |
+ | - role: Enum ('PATIENT', 'DOCTOR', 'ADMIN')           |
+ | - first_name: String                                  |
+ | - last_name: String                                   |
+ | - timezone: String (e.g. 'Africa/Nairobi', 'UTC')     |
+ | - created_at: UTC Timestamp                           |
  +-------------------------------------------------------+
-        |                                       |
-        | (1:N)                                 | (1:N)
-        v                                       v
+                            |
+           +----------------+----------------+
+           | 1:1                             | 1:N
+           v                                 v
  +----------------------------------+  +----------------------------------+
- |        DoctorWorkingHours        |  |          DoctorTimeOff           |
+ |              Doctor              |  |           Appointment            |
  |----------------------------------|  |----------------------------------|
  | - id: UUID (PK)                  |  | - id: UUID (PK)                  |
- | - doctor: FK(Doctor)             |  | - doctor: FK(Doctor)             |
- | - day_of_week: Int (0=Mon..6=Sun)|  | - start_datetime: UTC Timestamp  |
- | - start_time: UTC Time           |  | - end_datetime: UTC Timestamp    |
- | - end_time: UTC Time             |  | - reason: Text                   |
- +----------------------------------+  +----------------------------------+
-        |
-        | (Target of booking)
-        v
- +-------------------------------------------------------+
- |                      Appointment                      |
- |-------------------------------------------------------|
- | - id: UUID (PK)                                       |
- | - doctor: FK(Doctor)                                  |
- | - patient: FK(User)                                   |
- | - start_time: UTC Timestamp                           |
- | - end_time: UTC Timestamp                             |
- | - status: Enum ('BOOKED', 'CANCELLED', 'COMPLETED')   |
- | - cancellation_reason: Text (Optional)                |
- | - created_at, updated_at: UTC Timestamp               |
- +-------------------------------------------------------+
+ | - user: OneToOne(User)           |  | - doctor: FK(Doctor)             |
+ | - specialization: String         |  | - patient: FK(User)              |
+ | - slot_duration_mins: Int (30)   |  | - start_time: UTC Timestamp (Idx)|
+ | - is_active: Boolean             |  | - end_time: UTC Timestamp (Idx)  |
+ +----------------------------------+  | - status: Enum                   |
+        |                  |           |   ('BOOKED','CANCELLED',         |
+        | 1:N              | 1:N       |    'NEEDS_RESCHEDULE')           |
+        v                  v           | - cancellation_reason: Text      |
+ +------------------+ +-------------+  | - created_at, updated_at: UTC    |
+ |DoctorWorkingHours| |DoctorTimeOff|  +----------------------------------+
+ |------------------| |-------------|                   ^
+ |- doctor: FK      | |- doctor: FK |                   |
+ |- day_of_week: Int| |- start_dt:  |                   |
+ |  (0=Mon..6=Sun)  | |  UTC TS     |                   |
+ |- start_time: Time| |- end_dt:    |                   |
+ |- end_time: Time  | |  UTC TS     |                   |
+ +------------------+ |- reason:Text|                   |
+                      +-------------+                   |
+                                                        |
+  [Database Constraint: UniqueConstraint(doctor, start_time) WHERE status='BOOKED']
 ```
 
 ---
 
-### Fixed Grid vs. Flexible Slot Architecture
+## 3. System Components & High-Level Architecture
 
-#### Decision: **Fixed Grid Generation with Dynamic Overlay**
-We evaluate two approaches to managing time slots:
-
-1. **Stored Fixed Slots (Database per slot)**:
-   - *Pros*: Simple SQL `SELECT * FROM slots WHERE is_booked=False`.
-   - *Cons*: Database bloat (thousands of empty slot rows created per year per doctor), high maintenance when working hours change.
-
-2. **Dynamic Slot Generation (Fixed 30-Minute Grid)** — **SELECTED**:
-   - Slots are computed on-the-fly based on the doctor's `WorkingHours` (e.g., 09:00, 09:30, 10:00) minus existing `Appointments` (status=`BOOKED`) and `DoctorTimeOff` intervals.
-   - Slot start times are strictly aligned to 30-minute boundaries (e.g., `09:00:00`, `09:30:00`).
-   - *Why*: Eliminates DB bloat, handles schedule changes dynamically, and enforces clean predictable slot boundaries.
-
----
-
-### Universal Timezone Architecture (UTC)
-
-#### Problem
-Patients and doctors can operate across different timezones (e.g., patient in London `UTC+1`, clinic/doctor in Nairobi `UTC+3`).
-
-#### Solution
-- **Storage Layer**: All timestamps (`start_time`, `end_time`, `created_at`) are saved in the database in **UTC** (`TIMESTAMPTZ` column in PostgreSQL).
-- **Application Layer**: Django operates with `USE_TZ = True` and default timezone `UTC`.
-- **API / UI Layer**: Inputs accepted in ISO 8601 string format with timezone offset (e.g., `2026-08-03T10:00:00+03:00`). Django automatically normalizes incoming timestamps to UTC before querying or storing. Responses provide ISO 8601 UTC timestamps, and the frontend converts them to the patient's or doctor's local browser timezone.
-
----
-
-### Concurrency Control & Race Condition Prevention (`select_for_update`)
-
-#### Problem: Race Conditions
-If two patients click "Book" for Doctor A at `10:00 AM UTC` simultaneously (at the exact same microsecond):
-1. Request 1 checks DB: `10:00 AM` is free.
-2. Request 2 checks DB: `10:00 AM` is free.
-3. Request 1 creates `Appointment`.
-4. Request 2 creates `Appointment`.
-→ **Result**: Double booking!
-
-#### Solution 1: Database Level Unique Constraint (Safety Net)
-We add a Database `UniqueConstraint` on `(doctor, start_time)` where `status = 'BOOKED'`.
-If Request 2 tries to insert, PostgreSQL throws an Integrity Error.
-
-#### Solution 2: Pessimistic Locking with `select_for_update()` (Application Transaction Level)
-To prevent lock contention and handle application-level validation cleanly inside a transaction:
-```python
-from django.db import transaction
-
-@transaction.atomic
-def book_appointment(patient, doctor_id, start_time):
-    # Lock the doctor row to serialize booking requests for this doctor
-    doctor = Doctor.objects.select_for_update().get(id=doctor_id)
-    
-    # Calculate end_time (start_time + 30 mins)
-    end_time = start_time + timedelta(minutes=30)
-    
-    # 1. Validate start_time is at least 1 hour from now
-    if start_time < timezone.now() + timedelta(hours=1):
-        raise ValidationError("Appointments must be booked at least 1 hour in advance.")
-
-    # 2. Check overlap with existing BOOKED appointments
-    overlapping = Appointment.objects.filter(
-        doctor=doctor,
-        status=AppointmentStatus.BOOKED,
-        start_time__lt=end_time,
-        end_time__gt=start_time
-    ).exists()
-    
-    if overlapping:
-        raise ValidationError("This time slot has already been booked by another patient.")
-        
-    # 3. Create appointment
-    return Appointment.objects.create(
-        patient=patient, doctor=doctor, start_time=start_time, end_time=end_time
-    )
+```
+                    +--------------------------------+
+                    |   Client (Web Browser / SPA)   |
+                    +--------------------------------+
+                                    |
+                                    | HTTP / JSON (ISO 8601 UTC)
+                                    v
+                    +--------------------------------+
+                    |    Nginx / Reverse Proxy       |
+                    +--------------------------------+
+                                    |
+                                    v
+                    +--------------------------------+
+                    |  Django / Gunicorn WSGI App    |
+                    |  (Authentication, Validation,  |
+                    |   Booking Services, DRF API)   |
+                    +--------------------------------+
+                                    |
+            +-----------------------+-----------------------+
+            | (Pessimistic Locking & Database Transactions) |
+            v                                               v
+ +----------------------------------+            +--------------------+
+ |  PostgreSQL Primary Database     |            | Redis Cache (Opt)  |
+ |  - TIMESTAMPTZ storage           |            | - Rate limiting    |
+ |  - Partial Unique Index          |            | - Session store    |
+ |  - FOR UPDATE Row Locks          |            +--------------------+
+ +----------------------------------+
 ```
 
-#### How `select_for_update()` Works:
-- `select_for_update()` executes a SQL query with `SELECT ... FOR UPDATE`.
-- The database acquires an exclusive row lock on the targeted `Doctor` record for the duration of the `@transaction.atomic` block.
-- If a second request arrives for the same doctor, it **waits** at `select_for_update()` until the first transaction commits or rolls back.
-- Once the lock is released, the second request re-evaluates the availability check and discovers the slot is now taken, returning a clear `400 Bad Request` or `409 Conflict` response instead of corrupting data.
+---
+
+## 4. Key Engineering Decisions & Trade-Offs
+
+### Decision 1: Dynamic Slot Generation vs. Pre-stored Slot Records
+
+* **Options Considered**:
+  1. *Pre-generated Slot Table*: Insert 30-minute rows for every doctor for months in advance into a `slots` table.
+  2. *Dynamic Slot Generation* (**Selected**): Compute available slots on-the-fly given a target doctor and date.
+* **Reasoning**:
+  - Pre-generating slots creates database bloat (tens of thousands of empty slot rows per doctor per year) and requires complex cron background jobs to update when a doctor modifies their working hours.
+  - Dynamic generation computes valid 30-minute grid slots from `DoctorWorkingHours`, then subtracts existing `BOOKED` appointments and `DoctorTimeOff` intervals via optimized SQL queries.
+* **Trade-Off**: Higher CPU/SQL query work on slot availability retrieval (`GET /doctors/{id}/availability`), but zero database bloat and instant reflection of schedule/time-off changes.
 
 ---
 
-### Doctor Time-Offs, Working Hours & Blackouts
+### Decision 2: Universal Timezone Standard (UTC)
 
-1. **Working Hours**: Set per day of the week (e.g., Monday 09:00 - 17:00). Slots are only generated within these bounds.
-2. **Doctor Time-Offs**: Overrides working hours. If a doctor creates a `DoctorTimeOff` entry (e.g., Emergency leave on Aug 5, 12:00 - 15:00), any slot overlapping with this interval is marked as unavailable.
-3. **Rescheduling / Cancellation**: When an appointment is cancelled (`status = CANCELLED`), its slot immediately becomes visible in availability calculations because availability filtering only excludes `status = BOOKED`.
+* **Options Considered**:
+  1. *Local Server Timezone Storage*.
+  2. *UTC Storage with Client-Side Conversion* (**Selected**).
+* **Reasoning**:
+  - Clinic systems may serve patients or doctors across different timezones or handle daylight saving changes.
+  - Storing naive local datetimes causes ambiguity during timezone shifts.
+* **Implementation**:
+  - PostgreSQL column type: `TIMESTAMPTZ`.
+  - Django setting: `USE_TZ = True`, `TIME_ZONE = 'UTC'`.
+  - API accepts and returns ISO 8601 strings with explicit UTC timezone markers (e.g., `2026-08-03T10:00:00Z`).
 
 ---
 
-### Authentication & Authorization (RBAC)
+### Decision 3: Race Condition Prevention (`select_for_update` vs. Unique Constraints)
 
-- **Patients**: Can register, log in, view available slots, book appointments for themselves, view their own appointments, reschedule or cancel their own appointments.
-- **Doctors**: Can log in, view their schedule/booked appointments, set their working hours, and add time-offs/blackouts.
-- **Admins / Staff**: Full access via Django Admin to manage doctors, patients, and system settings.
+* **The Challenge**: If two patients attempt to book the exact same 30-minute slot for Doctor X simultaneously, concurrent threads could both validate the slot as free and create duplicate appointments.
+* **Selected Defense (Dual Layer)**:
+  1. **Layer 1 — Transactional Pessimistic Lock (`select_for_update`)**:
+     Inside an `@transaction.atomic` block, the booking service executes `Doctor.objects.select_for_update().get(id=doctor_id)`. This places a SQL row lock on the target Doctor record. The second concurrent request is held waiting until the first transaction commits or rolls back.
+  2. **Layer 2 — Database Partial Unique Index**:
+     A partial PostgreSQL unique index `UniqueConstraint(fields=['doctor', 'start_time'], condition=Q(status='BOOKED'))` acts as a hard database guarantee.
 
 ---
 
-## Section 2: API & Architecture Specification
+### Decision 4: Doctor Working Hours & Time-Off Overrides
 
-### Required Endpoints & Business Logic Matrix
+* **Design**:
+  - `DoctorWorkingHours` defines recurring availability per day of week (e.g. Mon–Fri 08:00–17:00).
+  - `DoctorTimeOff` defines non-recurring blackout ranges (e.g., Aug 10, 10:00–14:00).
+  - Any 30-minute slot that overlaps with a `DoctorTimeOff` range or falls outside `DoctorWorkingHours` is automatically excluded.
 
-| Method | Endpoint | Description | Key Validations |
+---
+
+### Decision 5: Doctor Blackout Conflict Resolution (Patterns B & C)
+
+* **The Edge Case**: What happens if a patient already booked a 10:00 AM slot, and later the doctor declares emergency time-off covering 09:00 to 12:00?
+* **Selected Strategy (Patterns B & C)**:
+  1. **Pattern B (Priority Reschedule Status)**: Creating a `DoctorTimeOff` executes an atomic scan for active `BOOKED` appointments overlapping the blackout range and transitions their status to `NEEDS_RESCHEDULE` with a reason string (*"Doctor Emergency Time-Off — Priority Reschedule Required"*).
+  2. **Pattern C (Dashboard & Patient Warning Banner)**: The affected patient's dashboard highlights a warning banner prompting them to pick a new slot, and the Doctor Portal displays a conflict alert count.
+
+---
+
+## 5. Enforced Business Rules & Constraints
+
+1. **Doctor Activity**: Appointments can only be booked with active doctors (`is_active = True`).
+2. **Working Hours Alignment**: Every slot must fall strictly within the doctor's configured `DoctorWorkingHours` for that day of the week.
+3. **Exact 30-Minute Duration**: All appointments must be exactly 30 minutes long and aligned to 30-minute grid boundaries.
+4. **Advance Notice Guarantee**: Appointments cannot be booked in the past and **must be booked at least 1 hour in advance** of current system time (`start_time >= now + 1 hour`).
+5. **No Overlapping Bookings**: A slot cannot overlap with any active `BOOKED` appointment for that doctor.
+6. **Time-Off Respect**: Slots overlapping with a `DoctorTimeOff` blackout window cannot be booked.
+7. **Cancellation Rules**: An appointment can only be cancelled if it is currently active. A cancellation reason must be provided.
+8. **Reschedule Validation**: Moving an appointment validates the new slot against all booking rules, marks the old slot as available, and updates the appointment atomically.
+
+---
+
+## 6. API Architecture & Endpoints
+
+| Endpoint | Method | Purpose | HTTP Success / Error Codes |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/api/appointments/` | Book a slot | Doctor active, within working hours, not in time-off, not in past, $\ge 1$ hr in advance, 30 min duration, no overlapping `BOOKED` slot. |
-| `GET` | `/api/doctors/{id}/availability/` | Get 30-min available slots | Date query param required (`?date=YYYY-MM-DD`). Computes slots based on working hours minus booked appointments and time-offs. |
-| `PATCH` | `/api/appointments/{id}/cancel/` | Cancel appointment | Reason required (`reason`). Only patient who booked or doctor can cancel. Error if already cancelled. Slot freed immediately. |
-| `PATCH` | `/api/appointments/{id}/reschedule/` | Reschedule appointment | New slot (`new_start_time`). Must validate new slot with identical booking rules. Frees original slot. Error if cancelled. |
-| `GET` | `/api/patients/{id}/appointments/` | Patient upcoming appointments | Sorted by `start_time` ascending. Accessible by patient or staff. |
+| `/api/appointments/` | `POST` | Book a new 30-min appointment slot | `201 Created`, `400 Bad Request`, `409 Conflict` |
+| `/api/doctors/{id}/availability/` | `GET` | Get available 30-min slots for a date (`?date=YYYY-MM-DD`) | `200 OK`, `400 Bad Request`, `404 Not Found` |
+| `/api/appointments/{id}/cancel/` | `PATCH` | Cancel an appointment with a reason | `200 OK`, `400 Bad Request`, `404 Not Found` |
+| `/api/appointments/{id}/reschedule/` | `PATCH` | Move an appointment to a new slot | `200 OK`, `400 Bad Request`, `409 Conflict` |
+| `/api/patients/{id}/appointments/` | `GET` | Retrieve upcoming appointments sorted by date | `200 OK`, `403 Forbidden`, `404 Not Found` |
 
 ---
 
-## Section 3: CI/CD & Deployment Plan
+## 7. Deployment & Containerization Architecture
 
-- **Containerization**: Single multi-stage `Dockerfile` running as a non-root user (`appuser` with UID 10001) for security.
-- **Branches**:
-  - `develop`: Trigger for CI pipeline (Runs `flake8`/`black`, runs full Django pytest suite).
-  - `main` / `production`: Trigger for CD pipeline (Runs CI, builds Docker image, deploys to Cloud platform like Render / Fly.io / Railway / AWS).
-- **Secrets Management**: Database credentials, `SECRET_KEY`, and deployment tokens stored securely in **GitHub Actions Secrets**.
-
----
-
-## Section 4: AI Reflection
-
-*(This section records the reflective synthesis on AI tool usage as required by the assessment guidelines.)*
-
-1. **What did you use AI for across the four sections?**
-   - **System Design**: Brainstorming domain models, evaluating stored slot tables vs dynamic slot generation, and refining race condition strategies.
-   - **API Implementation**: Assisting with boilerplate serializer setups and boundary-edge test cases (e.g., Daylight Saving Time and exact 1-hour buffer checks).
-   - **Deployment & CI/CD**: Generating non-root user Dockerfile patterns and GitHub Actions workflow syntax.
-   - **Refactoring & Documentation**: Structuring comprehensive Markdown README and verifying docstrings.
-
-2. **Give one example where an AI suggestion improved your work. What did you prompt it with?**
-   - **Prompt**: *"How can I prevent two patients from double-booking the exact same 30-minute doctor slot at the same millisecond in Django DRF?"*
-   - **Outcome**: The AI suggested combining Django's `@transaction.atomic` and `select_for_update()` pessimistic lock with a DB-level `UniqueConstraint` on `(doctor, start_time, status)`. This dual-layer defense ensured both transaction-level grace and absolute database integrity.
-
-3. **Give one example where AI output was wrong or incomplete and how you caught it.**
-   - **Example**: In initial slot availability logic, AI generated a simple `exclude(appointment__start_time=slot_start)` check.
-   - **How it was caught**: During code review/testing, I realized this would miss partial overlaps or rescheduling windows, and failed to account for `DoctorTimeOff` ranges. I replaced it with proper interval boundary overlap logic (`start_time < slot_end AND end_time > slot_start`).
-
-4. **Name two decisions you made without AI. Why did you trust your own judgment there?**
-   - **Decision 1: Dynamic Slot Generation over Stored Slot Rows**. Storing millions of empty slot rows in Postgres adds database bloat and operational maintenance. Dynamic generation from WorkingHours and TimeOff is much cleaner and scalable.
-   - **Decision 2: Strict UTC Storage with Client-Side Local Time Rendering**. Trusting standardized UTC ISO timestamps in the database prevents ambiguity across international timezones and server migrations.
+- **Docker Multi-Stage Build**: Packaged using Docker, configured to run under a non-root dedicated user (`appuser`, UID 10001) for security compliance.
+- **CI/CD Pipeline Strategy**:
+  - `develop` branch: Triggers automated testing CI pipeline (Runs `flake8`, `pytest` suite, coverage checks).
+  - `production` branch: Triggers deployment to Cloud hosting upon passing tests.
+- **Secrets Management**: Sensitive environment keys (`SECRET_KEY`, `DATABASE_URL`) are injected via environment variables provided by GitHub Secrets.

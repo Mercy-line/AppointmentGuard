@@ -26,7 +26,6 @@ def get_doctor_available_slots(doctor_id, target_date):
     except DoctorWorkingHours.DoesNotExist:
         return []  # Doctor does not work on this day
 
-    # Construct daily shift start and end datetimes in UTC
     shift_start = timezone.make_aware(
         datetime.combine(target_date, working_hours.start_time),
         timezone.utc
@@ -40,7 +39,6 @@ def get_doctor_available_slots(doctor_id, target_date):
     now = timezone.now()
     min_allowed_booking_time = now + timedelta(hours=1)
 
-    # Fetch active booked appointments and time-offs for the doctor on this date
     booked_appointments = list(Appointment.objects.filter(
         doctor=doctor,
         status=AppointmentStatus.BOOKED,
@@ -60,12 +58,10 @@ def get_doctor_available_slots(doctor_id, target_date):
     while current_slot_start + slot_duration <= shift_end:
         current_slot_end = current_slot_start + slot_duration
 
-        # 1. Enforcement: Must be at least 1 hour in advance
         if current_slot_start < min_allowed_booking_time:
             current_slot_start += slot_duration
             continue
 
-        # 2. Enforcement: Check overlap with active booked appointments
         is_booked = any(
             appt.start_time < current_slot_end and appt.end_time > current_slot_start
             for appt in booked_appointments
@@ -74,7 +70,6 @@ def get_doctor_available_slots(doctor_id, target_date):
             current_slot_start += slot_duration
             continue
 
-        # 3. Enforcement: Check overlap with DoctorTimeOff
         is_time_off = any(
             to.start_datetime < current_slot_end and to.end_datetime > current_slot_start
             for to in time_offs
@@ -83,7 +78,6 @@ def get_doctor_available_slots(doctor_id, target_date):
             current_slot_start += slot_duration
             continue
 
-        # Valid slot found!
         available_slots.append({
             'start_time': current_slot_start.isoformat(),
             'end_time': current_slot_end.isoformat(),
@@ -96,12 +90,45 @@ def get_doctor_available_slots(doctor_id, target_date):
 
 
 @transaction.atomic
+def create_doctor_time_off(doctor, start_datetime, end_datetime, reason):
+    """
+    Creates a DoctorTimeOff blackout window and flags any conflicting existing 
+    booked appointments with status NEEDS_RESCHEDULE (Patterns B & C).
+    """
+    if start_datetime >= end_datetime:
+        raise ValidationError("Start datetime must be strictly before end datetime.")
+
+    time_off = DoctorTimeOff.objects.create(
+        doctor=doctor,
+        start_datetime=start_datetime,
+        end_datetime=end_datetime,
+        reason=reason
+    )
+
+    # Scan for conflicting active bookings and flag them with NEEDS_RESCHEDULE
+    conflicting = Appointment.objects.filter(
+        doctor=doctor,
+        status=AppointmentStatus.BOOKED,
+        start_time__lt=end_datetime,
+        end_time__gt=start_datetime
+    )
+
+    flagged_count = 0
+    for appt in conflicting:
+        appt.status = AppointmentStatus.NEEDS_RESCHEDULE
+        appt.cancellation_reason = f"Doctor Emergency Time-Off ({reason}) — Priority Reschedule Required."
+        appt.save()
+        flagged_count += 1
+
+    return time_off, flagged_count
+
+
+@transaction.atomic
 def book_appointment(patient, doctor_id, start_time):
     """
     Books a 30-minute appointment safely using pessimistic row-locking (select_for_update)
     to guarantee race condition prevention.
     """
-    # Lock the Doctor row to serialize concurrent booking requests for this doctor
     try:
         doctor = Doctor.objects.select_for_update().get(id=doctor_id, is_active=True)
     except Doctor.DoesNotExist:
@@ -110,20 +137,17 @@ def book_appointment(patient, doctor_id, start_time):
     if not isinstance(start_time, datetime):
         raise ValidationError("Invalid datetime format.")
 
-    # Ensure start_time is timezone-aware in UTC
     if timezone.is_naive(start_time):
         start_time = timezone.make_aware(start_time, timezone.utc)
 
     now = timezone.now()
 
-    # Rule 1: Cannot book in the past or within 1 hour of current time
     if start_time < now + timedelta(hours=1):
         raise ValidationError("Appointments must be booked at least 1 hour in advance.")
 
     slot_duration = timedelta(minutes=doctor.slot_duration_minutes)
     end_time = start_time + slot_duration
 
-    # Rule 2: Must fall within doctor's Working Hours for that day
     day_of_week = start_time.weekday()
     try:
         working_hours = DoctorWorkingHours.objects.get(doctor=doctor, day_of_week=day_of_week)
@@ -142,7 +166,6 @@ def book_appointment(patient, doctor_id, start_time):
     if start_time < shift_start or end_time > shift_end:
         raise ValidationError("Requested appointment time falls outside doctor's working hours.")
 
-    # Rule 3: Must not overlap with DoctorTimeOff
     overlapping_time_off = DoctorTimeOff.objects.filter(
         doctor=doctor,
         start_datetime__lt=end_time,
@@ -151,7 +174,6 @@ def book_appointment(patient, doctor_id, start_time):
     if overlapping_time_off:
         raise ValidationError("Doctor has scheduled time off during this slot.")
 
-    # Rule 4: Must not overlap with active BOOKED appointments (Pessimistic check)
     overlapping_appointment = Appointment.objects.filter(
         doctor=doctor,
         status=AppointmentStatus.BOOKED,
@@ -161,7 +183,6 @@ def book_appointment(patient, doctor_id, start_time):
     if overlapping_appointment:
         raise ValidationError("This time slot is already booked.")
 
-    # Create and return the appointment
     appointment = Appointment.objects.create(
         patient=patient,
         doctor=doctor,
@@ -186,7 +207,6 @@ def cancel_appointment(appointment_id, user, reason):
     except Appointment.DoesNotExist:
         raise ValidationError("Appointment not found.")
 
-    # Authorization Check: Only patient who booked, doctor, or admin can cancel
     is_patient = appointment.patient == user
     is_doctor = hasattr(user, 'doctor_profile') and appointment.doctor == user.doctor_profile
     is_admin = user.is_staff or user.role == UserRole.ADMIN
@@ -215,7 +235,6 @@ def reschedule_appointment(appointment_id, user, new_start_time):
     except Appointment.DoesNotExist:
         raise ValidationError("Appointment not found.")
 
-    # Authorization check
     is_patient = appointment.patient == user
     is_doctor = hasattr(user, 'doctor_profile') and appointment.doctor == user.doctor_profile
     is_admin = user.is_staff or user.role == UserRole.ADMIN
@@ -241,7 +260,6 @@ def reschedule_appointment(appointment_id, user, new_start_time):
     slot_duration = timedelta(minutes=doctor.slot_duration_minutes)
     new_end_time = new_start_time + slot_duration
 
-    # Validate working hours for new date
     day_of_week = new_start_time.weekday()
     try:
         working_hours = DoctorWorkingHours.objects.get(doctor=doctor, day_of_week=day_of_week)
@@ -260,7 +278,6 @@ def reschedule_appointment(appointment_id, user, new_start_time):
     if new_start_time < shift_start or new_end_time > shift_end:
         raise ValidationError("Rescheduled slot falls outside doctor's working hours.")
 
-    # Validate DoctorTimeOff
     overlapping_time_off = DoctorTimeOff.objects.filter(
         doctor=doctor,
         start_datetime__lt=new_end_time,
@@ -269,7 +286,6 @@ def reschedule_appointment(appointment_id, user, new_start_time):
     if overlapping_time_off:
         raise ValidationError("Doctor has scheduled time off during the requested slot.")
 
-    # Validate no overlapping ACTIVE booking (excluding current appointment being rescheduled)
     overlapping = Appointment.objects.filter(
         doctor=doctor,
         status=AppointmentStatus.BOOKED,
@@ -280,9 +296,9 @@ def reschedule_appointment(appointment_id, user, new_start_time):
     if overlapping:
         raise ValidationError("The requested new slot is already booked.")
 
-    # Apply reschedule updates
     appointment.start_time = new_start_time
     appointment.end_time = new_end_time
+    appointment.status = AppointmentStatus.BOOKED
     appointment.save()
 
     return appointment

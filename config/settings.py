@@ -1,14 +1,13 @@
 import os
 from pathlib import Path
-import dj_database_url
 
-
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-#  keep the secret key used in production secret!
+# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-appointmentguard-dev-key-change-in-prod')
 
-#  don't run with debug turned on in production!
+# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 't')
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,0.0.0.0').split(',')
@@ -22,7 +21,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    #  packages
+    # Third-party packages
     'rest_framework',
 
     # Local applications
@@ -63,13 +62,26 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASE_URL = os.getenv('DATABASE_URL')
 
 if DATABASE_URL:
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=DATABASE_URL,
-            conn_max_age=600,
-            conn_health_checks=True,
-        )
-    }
+    try:
+        import dj_database_url
+        DATABASES = {
+            'default': dj_database_url.config(
+                default=DATABASE_URL,
+                conn_max_age=600,
+                conn_health_checks=True,
+            )
+        }
+    except ImportError:
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': os.getenv('POSTGRES_DB', 'appointmentguard_db'),
+                'USER': os.getenv('POSTGRES_USER', 'appointment_user'),
+                'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'appointment_pass'),
+                'HOST': os.getenv('POSTGRES_HOST', 'db'),
+                'PORT': os.getenv('POSTGRES_PORT', '5432'),
+            }
+        }
 else:
     DATABASES = {
         'default': {
@@ -78,8 +90,11 @@ else:
         }
     }
 
-# Custom User Model
+# Custom User Model & Login URL Configuration
 AUTH_USER_MODEL = 'appointments.CustomUser'
+LOGIN_URL = 'appointments:login'
+LOGIN_REDIRECT_URL = 'appointments:dashboard'
+LOGOUT_REDIRECT_URL = 'appointments:dashboard'
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [

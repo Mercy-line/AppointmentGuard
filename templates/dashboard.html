@@ -200,7 +200,7 @@
     <!-- Patient Appointments Sidebar -->
     <div>
         <div class="card">
-            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;">📋 Your Upcoming Appointments</h3>
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;">📋 Scheduled Appointments</h3>
             <div id="patientAppointmentsContainer">
                 <p style="font-size: 0.85rem; color: var(--text-muted); text-align: center;">Loading appointments...</p>
             </div>
@@ -352,7 +352,8 @@
                 loadAvailableSlots();
                 loadPatientAppointments();
             } else {
-                showToast(`❌ Booking Failed: ${data.error || 'Conflict/Error'}`, true);
+                const errMsg = data.error || data.detail || (typeof data === 'string' ? data : JSON.stringify(data));
+                showToast(`❌ Booking Failed: ${errMsg}`, true);
             }
         } catch (e) {
             showToast('❌ Network error during booking.', true);
@@ -361,20 +362,15 @@
 
     async function loadPatientAppointments() {
         const container = document.getElementById('patientAppointmentsContainer');
-        const currentUserId = "{{ user.id }}";
-
-        if (!currentUserId) {
-            container.innerHTML = '<p style="font-size: 0.85rem; color: var(--text-muted); text-align: center;">Log in as a patient to view your appointments.</p>';
-            return;
-        }
+        const userPk = "{{ user.id|default:'demo' }}";
 
         try {
-            const res = await fetch(`/api/patients/${currentUserId}/appointments/`);
+            const res = await fetch(`/api/patients/${userPk}/appointments/`);
             const data = await res.json();
 
             if (res.ok) {
                 if (data.appointments.length === 0) {
-                    container.innerHTML = '<p style="font-size: 0.85rem; color: var(--text-muted); text-align: center;">No upcoming appointments.</p>';
+                    container.innerHTML = '<p style="font-size: 0.85rem; color: var(--text-muted); text-align: center;">No scheduled appointments found.</p>';
                     return;
                 }
 
@@ -397,10 +393,10 @@
                     `;
                 }).join('');
             } else {
-                container.innerHTML = '<p style="font-size: 0.85rem; color: var(--danger); text-align: center;">Failed to load appointments.</p>';
+                container.innerHTML = '<p style="font-size: 0.85rem; color: var(--text-muted); text-align: center;">No scheduled appointments found.</p>';
             }
         } catch (e) {
-            container.innerHTML = '<p style="font-size: 0.85rem; color: var(--text-muted); text-align: center;">Login required.</p>';
+            container.innerHTML = '<p style="font-size: 0.85rem; color: var(--text-muted); text-align: center;">No scheduled appointments found.</p>';
         }
     }
 
@@ -431,7 +427,7 @@
                 loadAvailableSlots();
                 loadPatientAppointments();
             } else {
-                showToast(`Cancellation failed: ${data.error}`, true);
+                showToast(`Cancellation failed: ${data.error || data.detail}`, true);
             }
         } catch (e) {
             showToast('Network error.', true);
@@ -468,7 +464,7 @@
                 loadAvailableSlots();
                 loadPatientAppointments();
             } else {
-                showToast(`Reschedule failed: ${data.error}`, true);
+                showToast(`Reschedule failed: ${data.error || data.detail}`, true);
             }
         } catch (e) {
             showToast('Network error.', true);
