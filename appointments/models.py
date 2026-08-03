@@ -1,4 +1,5 @@
 import uuid
+from datetime import date
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.conf import settings
@@ -13,8 +14,8 @@ class UserRole(models.TextChoices):
 
 class CustomUser(AbstractUser):
     """
-    Custom User model supporting Role-Based Access Control (RBAC)
-    and user timezone preferences.
+    Custom User model supporting Role-Based Access Control (RBAC),
+    dependent child management for under-18 family bookings, and timezone preferences.
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     role = models.CharField(
@@ -28,12 +29,32 @@ class CustomUser(AbstractUser):
         default='UTC',
         help_text="User's preferred timezone identifier (e.g. 'UTC', 'Africa/Nairobi')."
     )
+    date_of_birth = models.DateField(
+        null=True,
+        blank=True,
+        help_text="Date of birth for age verification (Under 18 dependent rule)."
+    )
+    parent_guardian = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='dependents',
+        help_text="Parent or legal guardian for minor dependents."
+    )
 
     def is_doctor(self):
         return self.role == UserRole.DOCTOR or hasattr(self, 'doctor_profile')
 
     def is_patient(self):
         return self.role == UserRole.PATIENT
+
+    def is_minor(self):
+        if not self.date_of_birth:
+            return False
+        today = date.today()
+        age = today.year - self.date_of_birth.year - ((today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day))
+        return age < 18
 
     def __str__(self):
         full_name = self.get_full_name()
@@ -141,6 +162,7 @@ class AppointmentStatus(models.TextChoices):
 class Appointment(models.Model):
     """
     Represents a 30-minute appointment between a patient and a doctor.
+    Supports guardian booking on behalf of under-18 minor dependents.
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     doctor = models.ForeignKey(
@@ -153,6 +175,14 @@ class Appointment(models.Model):
         on_delete=models.CASCADE,
         related_name='patient_appointments'
     )
+    booked_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='initiated_bookings',
+        help_text="User (e.g. Parent/Guardian) who initiated the booking."
+    )
     start_time = models.DateTimeField(db_index=True, help_text="UTC start timestamp")
     end_time = models.DateTimeField(db_index=True, help_text="UTC end timestamp")
     status = models.CharField(
@@ -162,6 +192,10 @@ class Appointment(models.Model):
         db_index=True
     )
     cancellation_reason = models.TextField(blank=True, null=True)
+    notification_sent = models.BooleanField(
+        default=False,
+        help_text="Flag indicating if a cancellation/reschedule notification was dispatched to patient."
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

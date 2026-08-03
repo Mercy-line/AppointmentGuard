@@ -105,7 +105,6 @@ def create_doctor_time_off(doctor, start_datetime, end_datetime, reason):
         reason=reason
     )
 
-    # Scan for conflicting active bookings and flag them with NEEDS_RESCHEDULE
     conflicting = Appointment.objects.filter(
         doctor=doctor,
         status=AppointmentStatus.BOOKED,
@@ -117,6 +116,7 @@ def create_doctor_time_off(doctor, start_datetime, end_datetime, reason):
     for appt in conflicting:
         appt.status = AppointmentStatus.NEEDS_RESCHEDULE
         appt.cancellation_reason = f"Doctor Emergency Time-Off ({reason}) — Priority Reschedule Required."
+        appt.notification_sent = True
         appt.save()
         flagged_count += 1
 
@@ -124,15 +124,20 @@ def create_doctor_time_off(doctor, start_datetime, end_datetime, reason):
 
 
 @transaction.atomic
-def book_appointment(patient, doctor_id, start_time):
+def book_appointment(patient, doctor_id, start_time, booked_by=None):
     """
-    Books a 30-minute appointment safely using pessimistic row-locking (select_for_update)
-    to guarantee race condition prevention.
+    Books a 30-minute appointment safely using pessimistic row-locking (select_for_update).
+    Supports parent/guardian booking on behalf of under-18 minor dependents.
     """
     try:
         doctor = Doctor.objects.select_for_update().get(id=doctor_id, is_active=True)
     except Doctor.DoesNotExist:
         raise ValidationError("Target doctor does not exist or is inactive.")
+
+    # Dependent minor rule verification: If booking on behalf of another user
+    if booked_by and booked_by != patient:
+        if not patient.is_minor() and patient.parent_guardian != booked_by:
+            raise ValidationError("Family members can only book appointments on behalf of minor dependents (under 18 years old).")
 
     if not isinstance(start_time, datetime):
         raise ValidationError("Invalid datetime format.")
@@ -141,7 +146,6 @@ def book_appointment(patient, doctor_id, start_time):
         start_time = timezone.make_aware(start_time, timezone.utc)
 
     now = timezone.now()
-
     if start_time < now + timedelta(hours=1):
         raise ValidationError("Appointments must be booked at least 1 hour in advance.")
 
@@ -185,6 +189,7 @@ def book_appointment(patient, doctor_id, start_time):
 
     appointment = Appointment.objects.create(
         patient=patient,
+        booked_by=booked_by or patient,
         doctor=doctor,
         start_time=start_time,
         end_time=end_time,
@@ -197,7 +202,7 @@ def book_appointment(patient, doctor_id, start_time):
 def cancel_appointment(appointment_id, user, reason):
     """
     Cancels an existing appointment with a reason.
-    Frees the slot immediately for future bookings.
+    If initiated by a doctor, dispatches a patient notification flag.
     """
     if not reason or not str(reason).strip():
         raise ValidationError("A cancellation reason is required.")
@@ -207,7 +212,7 @@ def cancel_appointment(appointment_id, user, reason):
     except Appointment.DoesNotExist:
         raise ValidationError("Appointment not found.")
 
-    is_patient = appointment.patient == user
+    is_patient = appointment.patient == user or appointment.booked_by == user
     is_doctor = hasattr(user, 'doctor_profile') and appointment.doctor == user.doctor_profile
     is_admin = user.is_staff or user.role == UserRole.ADMIN
 
@@ -219,8 +224,12 @@ def cancel_appointment(appointment_id, user, reason):
 
     appointment.status = AppointmentStatus.CANCELLED
     appointment.cancellation_reason = reason.strip()
-    appointment.save()
 
+    # Trigger notification dispatch flag if doctor initiated cancellation
+    if is_doctor or is_admin:
+        appointment.notification_sent = True
+
+    appointment.save()
     return appointment
 
 
@@ -235,7 +244,7 @@ def reschedule_appointment(appointment_id, user, new_start_time):
     except Appointment.DoesNotExist:
         raise ValidationError("Appointment not found.")
 
-    is_patient = appointment.patient == user
+    is_patient = appointment.patient == user or appointment.booked_by == user
     is_doctor = hasattr(user, 'doctor_profile') and appointment.doctor == user.doctor_profile
     is_admin = user.is_staff or user.role == UserRole.ADMIN
 
