@@ -5,7 +5,7 @@
 {% block extra_css %}
 <style>
     .dashboard-header {
-        margin-bottom: 2rem;
+        margin-bottom: 1.5rem;
     }
     .dashboard-header h1 {
         font-size: 1.85rem;
@@ -15,6 +15,37 @@
     .dashboard-header p {
         color: var(--text-muted);
         margin-top: 0.25rem;
+    }
+
+    .info-banner {
+        background: linear-gradient(135deg, #e0e7ff, #e0f2fe);
+        border: 1px solid #c7d2fe;
+        border-radius: var(--radius-md);
+        padding: 0.85rem 1.25rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    .info-banner-text {
+        font-size: 0.88rem;
+        color: #3730a3;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .info-banner-pill {
+        background: #4f46e5;
+        color: white;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 0.25rem 0.65rem;
+        border-radius: 20px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
     .grid-container {
@@ -163,6 +194,15 @@
 <div class="dashboard-header">
     <h1>🗓️ Clinic Appointment Scheduler</h1>
     <p>Select a doctor and date to view live available 30-minute booking slots.</p>
+</div>
+
+<div class="info-banner">
+    <div class="info-banner-text">
+        <span>🏥 <strong>Clinic Hours:</strong> Mon–Fri 09:00 AM – 05:00 PM UTC</span>
+        <span>|</span>
+        <span>⚡ <strong>Slot Standard:</strong> 30-Minute Grid Intervals</span>
+    </div>
+    <span class="info-banner-pill">Live Tele-Health Guard</span>
 </div>
 
 <div id="toastMessage" class="toast"></div>
