@@ -92,7 +92,7 @@ export default function HomePage() {
   const [doctorFilterTab, setDoctorFilterTab] = useState<'DOCTOR_QUEUE' | 'DOCTOR_CANCELLED'>('DOCTOR_QUEUE');
 
   // Admin Main Filter Tab: 'ADMIN_OVERVIEW' | 'ADMIN_DOCTORS' | 'ADMIN_APPOINTMENTS'
-  const [adminFilterTab, setAdminFilterTab] = useState<'ADMIN_OVERVIEW' | 'ADMIN_DOCTORS' | 'ADMIN_APPOINTMENTS'>('ADMIN_DOCTORS');
+  const [adminFilterTab, setAdminFilterTab] = useState<'ADMIN_OVERVIEW' | 'ADMIN_DOCTORS' | 'ADMIN_APPOINTMENTS'>('ADMIN_OVERVIEW');
 
   // Admin Selected Doctor Tab State
   const [selectedAdminDoctorId, setSelectedAdminDoctorId] = useState<string>('1');
@@ -182,7 +182,7 @@ export default function HomePage() {
   const [isTimeOffModalOpen, setIsTimeOffModalOpen] = useState<boolean>(false);
   const [timeOffStart, setTimeOffStart] = useState<string>('2026-08-05T08:00');
   const [timeOffEnd, setTimeOffEnd] = useState<string>('2026-08-05T17:00');
-  const [timeOffReason, setTimeOffReason] = useState<string>('Attending Medical Conference');
+  const [timeOffReason, setTimeOffReason] = useState<string>('Personal Leave');
 
   // Toggle Doctor Accordion Dropdown
   const toggleDoctorAccordion = (docId: string) => {
@@ -205,7 +205,7 @@ export default function HomePage() {
       setCurrentView('DASHBOARD');
       setPatientFilterTab('SCHEDULED');
       setDoctorFilterTab('DOCTOR_QUEUE');
-      setAdminFilterTab('ADMIN_DOCTORS');
+      setAdminFilterTab('ADMIN_OVERVIEW');
     } else {
       setAuthError('Invalid credentials. Please use one of the quick demo accounts below.');
     }
@@ -220,7 +220,7 @@ export default function HomePage() {
       setCurrentView('DASHBOARD');
       setPatientFilterTab('SCHEDULED');
       setDoctorFilterTab('DOCTOR_QUEUE');
-      setAdminFilterTab('ADMIN_DOCTORS');
+      setAdminFilterTab('ADMIN_OVERVIEW');
     }
   };
 
@@ -325,7 +325,7 @@ export default function HomePage() {
     setRescheduleTimeSlot(null);
   };
 
-  // Doctor Emergency Time-Off Handler
+  // Doctor Time-Off Handler
   const handleConfirmTimeOff = (e: React.FormEvent) => {
     e.preventDefault();
     const docId = currentUser?.role === 'DOCTOR' ? '1' : selectedDoctorId;
@@ -347,7 +347,7 @@ export default function HomePage() {
         return {
           ...a,
           status: 'CANCELLED',
-          cancellationReason: `Doctor Emergency Time-Off (${timeOffReason}).`,
+          cancellationReason: `Doctor Time-Off (${timeOffReason}).`,
           notificationSent: true
         };
       }
@@ -395,9 +395,14 @@ export default function HomePage() {
       <nav className="navbar">
         <div className="brand" onClick={() => { setCurrentView('HOME'); setIsMobileMenuOpen(false); }}>
           <div className="brand-icon">
-            <Stethoscope size={22} />
+            <Stethoscope size={20} />
           </div>
-          <span>AppointmentGuard</span>
+          {/* DESKTOP BRAND TITLE */}
+          <span className="brand-title-desktop">AppointmentGuard</span>
+          {/* MOBILE BRAND TITLE (SHOWS USER NAME WHEN LOGGED IN) */}
+          <span className="brand-title-mobile">
+            {currentUser ? currentUser.name : 'AppointmentGuard'}
+          </span>
         </div>
 
         {/* DESKTOP NAV LINKS */}
@@ -406,21 +411,22 @@ export default function HomePage() {
             /* LOGGED-IN NAVBAR */
             <>
               <div className="user-pill">
-                <span>👤 {currentUser.name}</span>
+                <span>{currentUser.name}</span>
                 <span className={`role-badge role-${currentUser.role.toLowerCase()}`}>{currentUser.role}</span>
               </div>
 
               {/* SETTINGS GEAR ICON BUTTON */}
               <button 
+                type="button"
                 className="btn-sm-outline"
                 style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', borderRadius: '30px' }}
                 onClick={() => setIsSettingsModalOpen(true)}
               >
-                <Settings size={16} color="#0284c7" /> Settings
+                Settings
               </button>
 
-              <button className="btn-logout" onClick={handleLogout}>
-                <LogOut size={15} style={{ marginRight: '4px', verticalAlign: 'middle' }} /> Logout
+              <button type="button" className="btn-logout" onClick={handleLogout}>
+                Logout
               </button>
             </>
           ) : (
@@ -431,68 +437,97 @@ export default function HomePage() {
               <a className="nav-link" href="#how-it-works-section">How It Works</a>
               <a className="nav-link" href="#why-choose-us-section">Why Choose Us</a>
               <a className="nav-link" href="#doctors-section">Our Doctors</a>
-              <button className="btn-login" onClick={() => setIsLoginModalOpen(true)}>Login</button>
+              <button type="button" className="btn-login" onClick={() => setIsLoginModalOpen(true)}>Login</button>
             </>
           )}
         </div>
 
         {/* MOBILE HAMBURGER TOGGLE BUTTON */}
         <button 
+          type="button"
           className="mobile-menu-toggle"
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          onClick={() => setIsMobileMenuOpen(prev => !prev)}
           aria-label="Toggle menu"
         >
-          {isMobileMenuOpen ? <X size={26} /> : <Menu size={26} />}
+          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </nav>
 
-      {/* MOBILE MENU DRAWER OVERLAY */}
+      {/* MOBILE MENU DRAWER OVERLAY — CLEAN TEXT-ONLY ITEMS (NO ICONS) */}
       {isMobileMenuOpen && (
         <div className="mobile-menu-drawer">
           {currentUser ? (
             <>
-              <div className="user-pill" style={{ justifyContent: 'center', marginBottom: '0.5rem' }}>
-                <span>👤 {currentUser.name}</span>
+              <div className="mobile-nav-link" style={{ background: '#e0f2fe', borderColor: '#bae6fd', color: '#0369a1', fontWeight: 700 }}>
+                <span>{currentUser.name}</span>
                 <span className={`role-badge role-${currentUser.role.toLowerCase()}`}>{currentUser.role}</span>
               </div>
 
               <button 
+                type="button"
                 className="mobile-nav-link"
                 onClick={() => { setIsSettingsModalOpen(true); setIsMobileMenuOpen(false); }}
               >
-                <span>⚙️ Account Settings & Password</span>
-                <Settings size={16} color="#0284c7" />
+                <span>Account Settings & Password</span>
               </button>
 
+              {currentUser.role === 'DOCTOR' && (
+                <button 
+                  type="button"
+                  className="mobile-nav-link"
+                  style={{ background: '#f0f9ff', color: '#0369a1' }}
+                  onClick={() => { setIsTimeOffModalOpen(true); setIsMobileMenuOpen(false); }}
+                >
+                  <span>Set Time-Off</span>
+                </button>
+              )}
+
               <button 
+                type="button"
                 className="mobile-nav-link"
-                style={{ background: '#fef2f2', color: '#dc2626' }}
+                style={{ background: '#fef2f2', color: '#dc2626', borderColor: '#fecaca' }}
                 onClick={handleLogout}
               >
-                <span>🚪 Sign Out</span>
-                <LogOut size={16} />
+                <span>Sign Out</span>
               </button>
             </>
           ) : (
             <>
-              <a className="mobile-nav-link" onClick={() => { setCurrentView('HOME'); setIsMobileMenuOpen(false); }}>
+              <button type="button" className="mobile-nav-link" onClick={() => { setCurrentView('HOME'); setIsMobileMenuOpen(false); }}>
                 <span>Home Landing Page</span>
-              </a>
-              <a className="mobile-nav-link" href="#services-section" onClick={() => setIsMobileMenuOpen(false)}>
+              </button>
+              <button type="button" className="mobile-nav-link" onClick={() => { 
+                const el = document.getElementById('services-section');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+                setIsMobileMenuOpen(false);
+              }}>
                 <span>Services</span>
-              </a>
-              <a className="mobile-nav-link" href="#how-it-works-section" onClick={() => setIsMobileMenuOpen(false)}>
+              </button>
+              <button type="button" className="mobile-nav-link" onClick={() => { 
+                const el = document.getElementById('how-it-works-section');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+                setIsMobileMenuOpen(false);
+              }}>
                 <span>How It Works</span>
-              </a>
-              <a className="mobile-nav-link" href="#why-choose-us-section" onClick={() => setIsMobileMenuOpen(false)}>
+              </button>
+              <button type="button" className="mobile-nav-link" onClick={() => { 
+                const el = document.getElementById('why-choose-us-section');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+                setIsMobileMenuOpen(false);
+              }}>
                 <span>Why Choose Us</span>
-              </a>
-              <a className="mobile-nav-link" href="#doctors-section" onClick={() => setIsMobileMenuOpen(false)}>
+              </button>
+              <button type="button" className="mobile-nav-link" onClick={() => { 
+                const el = document.getElementById('doctors-section');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+                setIsMobileMenuOpen(false);
+              }}>
                 <span>Our Doctors</span>
-              </a>
+              </button>
               <button 
+                type="button"
                 className="btn-primary" 
-                style={{ width: '100%', marginTop: '0.5rem', borderRadius: '10px', fontSize: '0.88rem' }}
+                style={{ width: '100%', marginTop: '0.4rem', borderRadius: '8px', fontSize: '0.82rem', padding: '0.6rem' }}
                 onClick={() => { setIsLoginModalOpen(true); setIsMobileMenuOpen(false); }}
               >
                 Sign In to Portal
@@ -508,28 +543,29 @@ export default function HomePage() {
         /* ROLE-BASED DASHBOARD VIEW */
         <div className="dashboard-container">
           
-          {/* WELCOME BANNER */}
+          {/* WELCOME BANNER (HIDDEN ON MOBILE VIEW) */}
           <div className="dash-banner">
             <div>
               <h1>Welcome back, {currentUser.name}!</h1>
               <p>
                 {currentUser.role === 'PATIENT' && 'Patient Portal — Select an action below to manage your visits or book a new appointment.'}
                 {currentUser.role === 'DOCTOR' && `Doctor Portal — ${currentUser.specialization || 'General Practice'} Schedule & Cancellation Logs.`}
-                {currentUser.role === 'ADMIN' && 'System Administration — Select a doctor tab below to view their assigned appointments.'}
+                {currentUser.role === 'ADMIN' && 'System Administration — Select an action tab below to manage system metrics, doctors, or master log.'}
               </p>
             </div>
             
             {currentUser.role === 'DOCTOR' && (
-              <button className="btn-warning" onClick={() => setIsTimeOffModalOpen(true)}>
-                <AlertTriangle size={16} /> + Log Emergency Time-Off
+              <button type="button" className="btn-primary" onClick={() => setIsTimeOffModalOpen(true)}>
+                <Calendar size={16} /> Set Time-Off
               </button>
             )}
           </div>
 
-          {/* PATIENT ACTION BUTTON TABS BELOW WELCOME CARD */}
+          {/* PATIENT ACTION BUTTON TABS (3 EQUAL COLUMNS SIDE-BY-SIDE ON MOBILE) */}
           {currentUser.role === 'PATIENT' && (
             <div className="dashboard-tabs">
               <button
+                type="button"
                 className={`dashboard-tab-btn ${patientFilterTab === 'BOOK_NEW' ? 'btn-primary' : 'btn-outline'}`}
                 style={{ 
                   background: patientFilterTab === 'BOOK_NEW' ? '#0284c7' : 'white',
@@ -537,10 +573,13 @@ export default function HomePage() {
                 }}
                 onClick={() => setPatientFilterTab('BOOK_NEW')}
               >
-                <PlusCircle size={17} /> Book Appointment
+                <PlusCircle size={14} /> 
+                <span className="tab-label-desktop">Book Appointment</span>
+                <span className="tab-label-mobile">Book</span>
               </button>
 
               <button
+                type="button"
                 className={`dashboard-tab-btn ${patientFilterTab === 'SCHEDULED' ? 'btn-primary' : 'btn-outline'}`}
                 style={{ 
                   background: patientFilterTab === 'SCHEDULED' ? '#0284c7' : 'white',
@@ -548,10 +587,13 @@ export default function HomePage() {
                 }}
                 onClick={() => setPatientFilterTab('SCHEDULED')}
               >
-                <Calendar size={17} /> My Scheduled Appointments
+                <Calendar size={14} /> 
+                <span className="tab-label-desktop">My Scheduled Appointments</span>
+                <span className="tab-label-mobile">Scheduled</span>
               </button>
 
               <button
+                type="button"
                 className={`dashboard-tab-btn ${patientFilterTab === 'CANCELLED' ? 'btn-primary' : 'btn-outline'}`}
                 style={{ 
                   background: patientFilterTab === 'CANCELLED' ? '#ef4444' : 'white',
@@ -560,15 +602,18 @@ export default function HomePage() {
                 }}
                 onClick={() => setPatientFilterTab('CANCELLED')}
               >
-                <AlertCircle size={17} /> Cancelled
+                <AlertCircle size={14} /> 
+                <span className="tab-label-desktop">Cancelled</span>
+                <span className="tab-label-mobile">Cancelled</span>
               </button>
             </div>
           )}
 
-          {/* DOCTOR ACTION BUTTON TABS BELOW WELCOME CARD */}
+          {/* DOCTOR ACTION BUTTON TABS (2 EQUAL COLUMNS SIDE-BY-SIDE ON MOBILE) */}
           {currentUser.role === 'DOCTOR' && (
-            <div className="dashboard-tabs">
+            <div className="dashboard-tabs dashboard-tabs-2">
               <button
+                type="button"
                 className={`dashboard-tab-btn ${doctorFilterTab === 'DOCTOR_QUEUE' ? 'btn-primary' : 'btn-outline'}`}
                 style={{ 
                   background: doctorFilterTab === 'DOCTOR_QUEUE' ? '#0284c7' : 'white',
@@ -576,10 +621,13 @@ export default function HomePage() {
                 }}
                 onClick={() => setDoctorFilterTab('DOCTOR_QUEUE')}
               >
-                <Calendar size={17} /> Active Patient Queue
+                <Calendar size={14} /> 
+                <span className="tab-label-desktop">Active Patient Queue</span>
+                <span className="tab-label-mobile">Active Queue</span>
               </button>
 
               <button
+                type="button"
                 className={`dashboard-tab-btn ${doctorFilterTab === 'DOCTOR_CANCELLED' ? 'btn-primary' : 'btn-outline'}`}
                 style={{ 
                   background: doctorFilterTab === 'DOCTOR_CANCELLED' ? '#ef4444' : 'white',
@@ -588,26 +636,19 @@ export default function HomePage() {
                 }}
                 onClick={() => setDoctorFilterTab('DOCTOR_CANCELLED')}
               >
-                <AlertCircle size={17} /> Cancelled Appointments
+                <AlertCircle size={14} /> 
+                <span className="tab-label-desktop">Cancelled Appointments</span>
+                <span className="tab-label-mobile">Cancelled</span>
               </button>
             </div>
           )}
 
-          {/* ADMIN ACTION BUTTON TABS BELOW WELCOME CARD */}
+          {/* ADMIN ACTION BUTTON TABS (METRICS FIRST -> DOCTORS -> MASTER LOG) */}
           {currentUser.role === 'ADMIN' && (
             <div className="dashboard-tabs">
+              {/* 1. METRICS OVERVIEW */}
               <button
-                className={`dashboard-tab-btn ${adminFilterTab === 'ADMIN_DOCTORS' ? 'btn-primary' : 'btn-outline'}`}
-                style={{ 
-                  background: adminFilterTab === 'ADMIN_DOCTORS' ? '#0284c7' : 'white',
-                  color: adminFilterTab === 'ADMIN_DOCTORS' ? 'white' : '#1e293b'
-                }}
-                onClick={() => setAdminFilterTab('ADMIN_DOCTORS')}
-              >
-                <Users size={17} /> Doctors & Assigned Appointments
-              </button>
-
-              <button
+                type="button"
                 className={`dashboard-tab-btn ${adminFilterTab === 'ADMIN_OVERVIEW' ? 'btn-primary' : 'btn-outline'}`}
                 style={{ 
                   background: adminFilterTab === 'ADMIN_OVERVIEW' ? '#0284c7' : 'white',
@@ -615,10 +656,29 @@ export default function HomePage() {
                 }}
                 onClick={() => setAdminFilterTab('ADMIN_OVERVIEW')}
               >
-                <Activity size={17} /> System Metrics Overview
+                <Activity size={14} /> 
+                <span className="tab-label-desktop">System Metrics Overview</span>
+                <span className="tab-label-mobile">Metrics</span>
               </button>
 
+              {/* 2. DOCTORS */}
               <button
+                type="button"
+                className={`dashboard-tab-btn ${adminFilterTab === 'ADMIN_DOCTORS' ? 'btn-primary' : 'btn-outline'}`}
+                style={{ 
+                  background: adminFilterTab === 'ADMIN_DOCTORS' ? '#0284c7' : 'white',
+                  color: adminFilterTab === 'ADMIN_DOCTORS' ? 'white' : '#1e293b'
+                }}
+                onClick={() => setAdminFilterTab('ADMIN_DOCTORS')}
+              >
+                <Users size={14} /> 
+                <span className="tab-label-desktop">Doctors & Assigned Appointments</span>
+                <span className="tab-label-mobile">Doctors</span>
+              </button>
+
+              {/* 3. MASTER LOG */}
+              <button
+                type="button"
                 className={`dashboard-tab-btn ${adminFilterTab === 'ADMIN_APPOINTMENTS' ? 'btn-primary' : 'btn-outline'}`}
                 style={{ 
                   background: adminFilterTab === 'ADMIN_APPOINTMENTS' ? '#0284c7' : 'white',
@@ -626,81 +686,84 @@ export default function HomePage() {
                 }}
                 onClick={() => setAdminFilterTab('ADMIN_APPOINTMENTS')}
               >
-                <FileText size={17} /> All Appointments Master Log
+                <FileText size={14} /> 
+                <span className="tab-label-desktop">All Appointments Master Log</span>
+                <span className="tab-label-mobile">Master Log</span>
               </button>
             </div>
           )}
 
           {/* ADMIN OVERVIEW METRICS CARDS */}
           {currentUser.role === 'ADMIN' && adminFilterTab === 'ADMIN_OVERVIEW' && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '2.5rem' }}>
-              <div style={{ background: 'white', padding: '1.5rem', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#0284c7', marginBottom: '0.5rem' }}>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase' }}>Total Appointments</span>
-                  <Calendar size={22} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+              <div style={{ background: 'white', padding: '1.25rem', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#0284c7', marginBottom: '0.4rem' }}>
+                  <span style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase' }}>Total Appointments</span>
+                  <Calendar size={20} />
                 </div>
-                <h3 style={{ fontSize: '2rem', fontWeight: 800, color: '#0f172a' }}>{appointments.length}</h3>
-                <p style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '0.3rem' }}>All-time bookings log</p>
+                <h3 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#0f172a' }}>{appointments.length}</h3>
+                <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem' }}>All-time bookings log</p>
               </div>
 
-              <div style={{ background: 'white', padding: '1.5rem', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#059669', marginBottom: '0.5rem' }}>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase' }}>Active Doctors</span>
-                  <Users size={22} />
+              <div style={{ background: 'white', padding: '1.25rem', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#059669', marginBottom: '0.4rem' }}>
+                  <span style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase' }}>Active Doctors</span>
+                  <Users size={20} />
                 </div>
-                <h3 style={{ fontSize: '2rem', fontWeight: 800, color: '#0f172a' }}>{INITIAL_DOCTORS.length}</h3>
-                <p style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '0.3rem' }}>Across 5 specialties</p>
+                <h3 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#0f172a' }}>{INITIAL_DOCTORS.length}</h3>
+                <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem' }}>Across 5 specialties</p>
               </div>
 
-              <div style={{ background: 'white', padding: '1.5rem', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#166534', marginBottom: '0.5rem' }}>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase' }}>Confirmed Visits</span>
-                  <CheckCircle2 size={22} />
+              <div style={{ background: 'white', padding: '1.25rem', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#166534', marginBottom: '0.4rem' }}>
+                  <span style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase' }}>Confirmed Visits</span>
+                  <CheckCircle2 size={20} />
                 </div>
-                <h3 style={{ fontSize: '2rem', fontWeight: 800, color: '#0f172a' }}>{appointments.filter(a => a.status === 'CONFIRMED').length}</h3>
-                <p style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '0.3rem' }}>Active scheduled slots</p>
+                <h3 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#0f172a' }}>{appointments.filter(a => a.status === 'CONFIRMED').length}</h3>
+                <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem' }}>Active scheduled slots</p>
               </div>
 
-              <div style={{ background: 'white', padding: '1.5rem', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#dc2626', marginBottom: '0.5rem' }}>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase' }}>Cancelled Visits</span>
-                  <AlertCircle size={22} />
+              <div style={{ background: 'white', padding: '1.25rem', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#dc2626', marginBottom: '0.4rem' }}>
+                  <span style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase' }}>Cancelled Visits</span>
+                  <AlertCircle size={20} />
                 </div>
-                <h3 style={{ fontSize: '2rem', fontWeight: 800, color: '#0f172a' }}>{appointments.filter(a => a.status === 'CANCELLED').length}</h3>
-                <p style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '0.3rem' }}>Cancelled / emergency time-off</p>
+                <h3 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#0f172a' }}>{appointments.filter(a => a.status === 'CANCELLED').length}</h3>
+                <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem' }}>Cancelled / time-off</p>
               </div>
             </div>
           )}
 
           {/* ADMIN VIEW: INDIVIDUAL DOCTOR TABS WITH CIRCULAR INITIALS & APPOINTMENTS */}
           {currentUser.role === 'ADMIN' && adminFilterTab === 'ADMIN_DOCTORS' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               
               {/* DOCTOR SELECTOR TABS WITH INITIALS BADGES */}
-              <div style={{ background: 'white', padding: '1.25rem', borderRadius: '18px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)' }}>
-                <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.85rem' }}>
+              <div style={{ background: 'white', padding: '1rem', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)' }}>
+                <h3 style={{ fontSize: '0.88rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.75rem' }}>
                   Select a Doctor to View Their Assigned Appointments:
                 </h3>
 
-                <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                   {INITIAL_DOCTORS.map(doc => {
                     const docApptCount = appointments.filter(a => a.doctorId === doc.id || a.doctorName.includes(doc.name)).length;
                     const isSelected = doc.id === selectedAdminDoctor.id;
                     return (
                       <button
+                        type="button"
                         key={doc.id}
                         onClick={() => setSelectedAdminDoctorId(doc.id)}
                         style={{
                           display: 'flex',
                           alignItems: 'center',
-                          gap: '0.5rem',
-                          padding: '0.45rem 1rem',
+                          gap: '0.45rem',
+                          padding: '0.4rem 0.85rem',
                           borderRadius: '30px',
                           border: `2px solid ${isSelected ? '#0284c7' : '#e2e8f0'}`,
                           background: isSelected ? '#e0f2fe' : 'white',
                           color: isSelected ? '#0369a1' : '#334155',
                           fontWeight: isSelected ? 700 : 600,
-                          fontSize: '0.82rem',
+                          fontSize: '0.78rem',
                           cursor: 'pointer',
                           transition: 'all 0.2s ease',
                           flexWrap: 'nowrap'
@@ -708,8 +771,8 @@ export default function HomePage() {
                       >
                         {/* CIRCULAR DOCTOR INITIALS BADGE */}
                         <div style={{
-                          width: '28px',
-                          height: '28px',
+                          width: '24px',
+                          height: '24px',
                           borderRadius: '50%',
                           border: '1.5px solid #0284c7',
                           display: 'flex',
@@ -717,7 +780,7 @@ export default function HomePage() {
                           justifyContent: 'center',
                           background: '#cff4fc',
                           color: '#087990',
-                          fontSize: '0.72rem',
+                          fontSize: '0.68rem',
                           fontWeight: 800,
                           flexShrink: 0
                         }}>
@@ -729,9 +792,9 @@ export default function HomePage() {
                         <span style={{ 
                           background: isSelected ? '#0284c7' : '#cbd5e1', 
                           color: 'white', 
-                          padding: '0.1rem 0.45rem', 
+                          padding: '0.08rem 0.4rem', 
                           borderRadius: '20px', 
-                          fontSize: '0.72rem',
+                          fontSize: '0.7rem',
                           fontWeight: 800 
                         }}>
                           {docApptCount}
@@ -743,15 +806,15 @@ export default function HomePage() {
               </div>
 
               {/* SELECTED DOCTOR APPOINTMENTS CARD */}
-              <div style={{ background: 'white', borderRadius: '18px', padding: '1.5rem', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+              <div style={{ background: 'white', borderRadius: '16px', padding: '1.25rem', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
                 
                 {/* Selected Doctor Profile Header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.75rem', paddingBottom: '1rem', borderBottom: '1px solid #e2e8f0' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.85rem', marginBottom: '1.5rem', paddingBottom: '0.85rem', borderBottom: '1px solid #e2e8f0' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
                     {/* CIRCULAR INITIALS BADGE */}
                     <div style={{
-                      width: '48px',
-                      height: '48px',
+                      width: '42px',
+                      height: '42px',
                       borderRadius: '50%',
                       border: '2px solid #0284c7',
                       display: 'flex',
@@ -759,7 +822,7 @@ export default function HomePage() {
                       justifyContent: 'center',
                       background: '#cff4fc',
                       color: '#087990',
-                      fontSize: '1.1rem',
+                      fontSize: '1rem',
                       fontWeight: 800,
                       flexShrink: 0
                     }}>
@@ -767,44 +830,44 @@ export default function HomePage() {
                     </div>
 
                     <div>
-                      <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f172a' }}>{selectedAdminDoctor.name}</h2>
-                      <p style={{ fontSize: '0.85rem', color: '#0284c7', fontWeight: 600, marginTop: '0.15rem' }}>
+                      <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a' }}>{selectedAdminDoctor.name}</h2>
+                      <p style={{ fontSize: '0.8rem', color: '#0284c7', fontWeight: 600, marginTop: '0.15rem' }}>
                         {selectedAdminDoctor.specialization} • {selectedAdminDoctor.hours}
                       </p>
                     </div>
                   </div>
 
                   <div style={{ textAlign: 'left' }}>
-                    <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Assigned Appointments</span>
-                    <h3 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a' }}>{selectedDoctorAppointments.length}</h3>
+                    <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Assigned Appointments</span>
+                    <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0f172a' }}>{selectedDoctorAppointments.length}</h3>
                   </div>
                 </div>
 
                 {/* Appointments List for Selected Doctor */}
                 {selectedDoctorAppointments.length === 0 ? (
-                  <div style={{ padding: '2.5rem 1rem', color: '#64748b', textAlign: 'center' }}>
-                    <Calendar size={44} color="#cbd5e1" style={{ marginBottom: '0.85rem' }} />
-                    <p style={{ fontWeight: 600, fontSize: '0.88rem' }}>No appointments booked for {selectedAdminDoctor.name} yet.</p>
+                  <div style={{ padding: '2rem 1rem', color: '#64748b', textAlign: 'center' }}>
+                    <Calendar size={38} color="#cbd5e1" style={{ marginBottom: '0.75rem' }} />
+                    <p style={{ fontWeight: 600, fontSize: '0.82rem' }}>No appointments booked for {selectedAdminDoctor.name} yet.</p>
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
                     {selectedDoctorAppointments.map(appt => (
                       <div 
                         key={appt.id} 
                         style={{ 
-                          padding: '1.1rem', 
+                          padding: '1rem', 
                           border: '1px solid #e2e8f0', 
                           borderRadius: '12px', 
                           background: '#ffffff'
                         }}
                       >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.5rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.4rem' }}>
                           <div>
-                            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0284c7', textTransform: 'uppercase' }}>Ref: {appt.id}</span>
-                            <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0f172a', margin: '0.2rem 0' }}>
+                            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#0284c7', textTransform: 'uppercase' }}>Ref: {appt.id}</span>
+                            <h3 style={{ fontSize: '0.98rem', fontWeight: 700, color: '#0f172a', margin: '0.15rem 0' }}>
                               Patient: {appt.patientName}
                             </h3>
-                            <p style={{ fontSize: '0.82rem', color: '#64748b' }}>
+                            <p style={{ fontSize: '0.78rem', color: '#64748b' }}>
                               Doctor: {appt.doctorName} ({appt.specialization})
                             </p>
                           </div>
@@ -814,20 +877,21 @@ export default function HomePage() {
                           </span>
                         </div>
 
-                        <div style={{ display: 'flex', gap: '1rem', marginTop: '0.75rem', color: '#334155', fontSize: '0.85rem', fontWeight: 600, flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', gap: '0.85rem', marginTop: '0.65rem', color: '#334155', fontSize: '0.8rem', fontWeight: 600, flexWrap: 'wrap' }}>
                           <span>📅 {appt.date}</span>
                           <span>🕒 {appt.time} (30 mins)</span>
                         </div>
 
                         {appt.cancellationReason && (
-                          <div style={{ marginTop: '0.75rem', padding: '0.65rem 0.85rem', background: '#fef2f2', borderRadius: '8px', border: '1px solid #fecaca', color: '#991b1b', fontSize: '0.82rem' }}>
+                          <div style={{ marginTop: '0.65rem', padding: '0.55rem 0.75rem', background: '#fef2f2', borderRadius: '8px', border: '1px solid #fecaca', color: '#991b1b', fontSize: '0.78rem' }}>
                             <strong>Reason / Alert:</strong> {appt.cancellationReason}
                           </div>
                         )}
 
                         {appt.status !== 'CANCELLED' && (
-                          <div style={{ display: 'flex', gap: '0.6rem', marginTop: '1rem', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.85rem', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                             <button 
+                              type="button"
                               className="btn-sm-outline"
                               onClick={() => {
                                 setActiveApptForAction(appt);
@@ -838,8 +902,9 @@ export default function HomePage() {
                             </button>
                             
                             <button 
+                              type="button"
                               className="btn-danger"
-                              style={{ padding: '0.4rem 0.85rem', fontSize: '0.82rem' }}
+                              style={{ padding: '0.35rem 0.75rem', fontSize: '0.78rem' }}
                               onClick={() => {
                                 setActiveApptForAction(appt);
                                 setIsCancelModalOpen(true);
@@ -860,12 +925,12 @@ export default function HomePage() {
 
           {/* DASHBOARD CONTENT CONTAINER FOR PATIENT/DOCTOR/ADMIN MASTER LOG */}
           {(currentUser.role !== 'ADMIN' || adminFilterTab === 'ADMIN_APPOINTMENTS' || adminFilterTab === 'ADMIN_OVERVIEW') && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               
               {/* PATIENT BOOKING SEARCH CARD */}
               {(currentUser.role === 'PATIENT' && patientFilterTab === 'BOOK_NEW') && (
                 <div className="search-card">
-                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f172a', marginBottom: '1rem' }}>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.85rem' }}>
                     Book a New Appointment
                   </h3>
                   
@@ -893,7 +958,7 @@ export default function HomePage() {
                       />
                     </div>
 
-                    <button className="btn-primary" style={{ padding: '0.8rem 1.75rem' }}>
+                    <button type="button" className="btn-primary" style={{ padding: '0.75rem 1.5rem' }}>
                       Check Availability
                     </button>
                   </div>
@@ -903,6 +968,7 @@ export default function HomePage() {
                     <div className="slots-grid">
                       {DEFAULT_TIME_SLOTS.map(slot => (
                         <button
+                          type="button"
                           key={slot.time}
                           className={`slot-chip ${selectedTimeSlot === slot.time ? 'selected' : ''}`}
                           onClick={() => setSelectedTimeSlot(slot.time)}
@@ -913,6 +979,7 @@ export default function HomePage() {
                     </div>
 
                     <button 
+                      type="button"
                       className="btn-primary"
                       disabled={!selectedTimeSlot}
                       style={{ opacity: selectedTimeSlot ? 1 : 0.6, cursor: selectedTimeSlot ? 'pointer' : 'not-allowed', width: '100%' }}
@@ -926,9 +993,9 @@ export default function HomePage() {
 
               {/* APPOINTMENTS LIST CARD */}
               {(currentUser.role !== 'PATIENT' || patientFilterTab !== 'BOOK_NEW') && (
-                <div style={{ background: 'white', borderRadius: '18px', padding: '1.5rem', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                    <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f172a' }}>
+                <div style={{ background: 'white', borderRadius: '16px', padding: '1.25rem', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a' }}>
                       {currentUser.role === 'PATIENT' && (
                         patientFilterTab === 'SCHEDULED' ? 'My Scheduled Appointments' : 'Cancelled Appointments'
                       )}
@@ -937,34 +1004,34 @@ export default function HomePage() {
                       )}
                       {currentUser.role === 'ADMIN' && 'System Appointments Master Log'}
                     </h2>
-                    <span style={{ fontSize: '0.82rem', color: '#64748b', fontWeight: 600 }}>{visibleAppointments.length} Records</span>
+                    <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 600 }}>{visibleAppointments.length} Records</span>
                   </div>
 
                   {visibleAppointments.length === 0 ? (
-                    <div style={{ padding: '2.5rem 1rem', color: '#64748b', textAlign: 'center' }}>
-                      <Calendar size={44} color="#cbd5e1" style={{ marginBottom: '0.85rem' }} />
-                      <p style={{ fontWeight: 600, fontSize: '0.88rem' }}>No appointments in this category.</p>
+                    <div style={{ padding: '2rem 1rem', color: '#64748b', textAlign: 'center' }}>
+                      <Calendar size={38} color="#cbd5e1" style={{ marginBottom: '0.75rem' }} />
+                      <p style={{ fontWeight: 600, fontSize: '0.82rem' }}>No appointments in this category.</p>
                     </div>
                   ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
                       {visibleAppointments.map(appt => (
                         <div 
                           key={appt.id} 
                           style={{ 
-                            padding: '1.1rem', 
+                            padding: '1rem', 
                             border: '1px solid #e2e8f0', 
                             borderRadius: '12px', 
                             background: '#ffffff',
                             borderColor: '#e2e8f0'
                           }}
                         >
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.5rem' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.4rem' }}>
                             <div>
-                              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0284c7', textTransform: 'uppercase' }}>Ref: {appt.id}</span>
-                              <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0f172a', margin: '0.2rem 0' }}>
+                              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#0284c7', textTransform: 'uppercase' }}>Ref: {appt.id}</span>
+                              <h3 style={{ fontSize: '0.98rem', fontWeight: 700, color: '#0f172a', margin: '0.15rem 0' }}>
                                 {currentUser.role === 'PATIENT' ? appt.doctorName : `Patient: ${appt.patientName}`}
                               </h3>
-                              <p style={{ fontSize: '0.82rem', color: '#64748b' }}>
+                              <p style={{ fontSize: '0.78rem', color: '#64748b' }}>
                                 {currentUser.role === 'PATIENT' ? appt.specialization : `Assigned Doctor: ${appt.doctorName}`}
                               </p>
                             </div>
@@ -974,20 +1041,21 @@ export default function HomePage() {
                             </span>
                           </div>
 
-                          <div style={{ display: 'flex', gap: '1rem', marginTop: '0.75rem', color: '#334155', fontSize: '0.85rem', fontWeight: 600, flexWrap: 'wrap' }}>
+                          <div style={{ display: 'flex', gap: '0.85rem', marginTop: '0.65rem', color: '#334155', fontSize: '0.8rem', fontWeight: 600, flexWrap: 'wrap' }}>
                             <span>📅 {appt.date}</span>
                             <span>🕒 {appt.time} (30 mins)</span>
                           </div>
 
                           {appt.cancellationReason && (
-                            <div style={{ marginTop: '0.75rem', padding: '0.65rem 0.85rem', background: '#fef2f2', borderRadius: '8px', border: '1px solid #fecaca', color: '#991b1b', fontSize: '0.82rem' }}>
+                            <div style={{ marginTop: '0.65rem', padding: '0.55rem 0.75rem', background: '#fef2f2', borderRadius: '8px', border: '1px solid #fecaca', color: '#991b1b', fontSize: '0.78rem' }}>
                               <strong>Reason / Alert:</strong> {appt.cancellationReason}
                             </div>
                           )}
 
                           {appt.status !== 'CANCELLED' && (
-                            <div style={{ display: 'flex', gap: '0.6rem', marginTop: '1rem', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.85rem', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                               <button 
+                                type="button"
                                 className="btn-sm-outline"
                                 onClick={() => {
                                   setActiveApptForAction(appt);
@@ -998,8 +1066,9 @@ export default function HomePage() {
                               </button>
                               
                               <button 
+                                type="button"
                                 className="btn-danger"
-                                style={{ padding: '0.4rem 0.85rem', fontSize: '0.82rem' }}
+                                style={{ padding: '0.35rem 0.75rem', fontSize: '0.78rem' }}
                                 onClick={() => {
                                   setActiveApptForAction(appt);
                                   setIsCancelModalOpen(true);
@@ -1034,7 +1103,7 @@ export default function HomePage() {
                   Skip the queue. Choose your doctor, view real-time availability and confirm a 30-minute visit at our clinic in just a few clicks.
                 </p>
                 <div className="hero-actions">
-                  <button className="btn-primary" onClick={() => setIsLoginModalOpen(true)}>
+                  <button type="button" className="btn-primary" onClick={() => setIsLoginModalOpen(true)}>
                     Book Appointment
                   </button>
                   <a href="#doctors-section" className="btn-outline">View Doctors</a>
@@ -1046,17 +1115,17 @@ export default function HomePage() {
                   <div style={{ 
                     background: '#e0f2fe', 
                     borderRadius: '50%', 
-                    width: '140px', 
-                    height: '140px', 
-                    margin: '0 auto 1.25rem',
+                    width: '130px', 
+                    height: '130px', 
+                    margin: '0 auto 1rem',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center'
                   }}>
-                    <Calendar size={70} color="#0284c7" />
+                    <Calendar size={64} color="#0284c7" />
                   </div>
-                  <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a' }}>Real-Time Availability</h3>
-                  <p style={{ color: '#64748b', fontSize: '0.85rem', marginTop: '0.35rem' }}>Instant confirmation & concurrency safe booking</p>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a' }}>Real-Time Availability</h3>
+                  <p style={{ color: '#64748b', fontSize: '0.82rem', marginTop: '0.25rem' }}>Instant confirmation & online booking</p>
                 </div>
               </div>
             </div>
@@ -1070,27 +1139,27 @@ export default function HomePage() {
 
             <div className="services-grid">
               <div className="service-card">
-                <Stethoscope size={22} color="#087990" />
+                <Stethoscope size={20} color="#087990" />
                 <span>General Consultation</span>
               </div>
               <div className="service-card">
-                <Baby size={22} color="#087990" />
+                <Baby size={20} color="#087990" />
                 <span>Pediatrics</span>
               </div>
               <div className="service-card">
-                <Heart size={22} color="#087990" />
+                <Heart size={20} color="#087990" />
                 <span>Women's Health</span>
               </div>
               <div className="service-card">
-                <Syringe size={22} color="#087990" />
+                <Syringe size={20} color="#087990" />
                 <span>Vaccinations</span>
               </div>
               <div className="service-card">
-                <TestTube size={22} color="#087990" />
+                <TestTube size={20} color="#087990" />
                 <span>Laboratory Services</span>
               </div>
               <div className="service-card">
-                <RefreshCw size={22} color="#087990" />
+                <RefreshCw size={20} color="#087990" />
                 <span>Follow-up Visits</span>
               </div>
             </div>
@@ -1105,7 +1174,7 @@ export default function HomePage() {
             <div className="cards-grid-3">
               <div className="feature-card">
                 <div className="feature-icon-badge">
-                  <UserIcon size={22} />
+                  <UserIcon size={20} />
                 </div>
                 <h3 className="feature-title">Choose a Doctor</h3>
                 <p className="feature-desc">Browse our clinicians and pick the right specialist for your needs.</p>
@@ -1113,7 +1182,7 @@ export default function HomePage() {
 
               <div className="feature-card">
                 <div className="feature-icon-badge">
-                  <Calendar size={22} />
+                  <Calendar size={20} />
                 </div>
                 <h3 className="feature-title">Pick a Time</h3>
                 <p className="feature-desc">See real-time openings and select a 30-minute slot that fits your schedule.</p>
@@ -1121,7 +1190,7 @@ export default function HomePage() {
 
               <div className="feature-card">
                 <div className="feature-icon-badge">
-                  <CheckCircle2 size={22} />
+                  <CheckCircle2 size={20} />
                 </div>
                 <h3 className="feature-title">Confirm Booking</h3>
                 <p className="feature-desc">Confirm in one click and get an instant appointment reference.</p>
@@ -1138,7 +1207,7 @@ export default function HomePage() {
             <div className="cards-grid-4">
               <div className="feature-card">
                 <div className="feature-icon-badge">
-                  <Activity size={22} />
+                  <Activity size={20} />
                 </div>
                 <h3 className="feature-title">Easy Online Booking</h3>
                 <p className="feature-desc">Book a visit in under a minute, any time of day.</p>
@@ -1146,7 +1215,7 @@ export default function HomePage() {
 
               <div className="feature-card">
                 <div className="feature-icon-badge">
-                  <UserIcon size={22} />
+                  <UserIcon size={20} />
                 </div>
                 <h3 className="feature-title">Qualified Doctors</h3>
                 <p className="feature-desc">Licensed clinicians across five core specialties.</p>
@@ -1154,7 +1223,7 @@ export default function HomePage() {
 
               <div className="feature-card">
                 <div className="feature-icon-badge">
-                  <Clock size={22} />
+                  <Clock size={20} />
                 </div>
                 <h3 className="feature-title">Real-Time Availability</h3>
                 <p className="feature-desc">Slots update instantly so you never double-book.</p>
@@ -1162,7 +1231,7 @@ export default function HomePage() {
 
               <div className="feature-card">
                 <div className="feature-icon-badge">
-                  <Shield size={22} />
+                  <Shield size={20} />
                 </div>
                 <h3 className="feature-title">Secure Patient Records</h3>
                 <p className="feature-desc">Your health data stays private and encrypted.</p>
@@ -1187,11 +1256,11 @@ export default function HomePage() {
                       className="doctor-accordion-header"
                       onClick={() => toggleDoctorAccordion(doc.id)}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                         {/* CIRCULAR INITIALS CONTAINER */}
                         <div style={{
-                          width: '38px',
-                          height: '38px',
+                          width: '36px',
+                          height: '36px',
                           borderRadius: '50%',
                           border: '2px solid #0284c7',
                           display: 'flex',
@@ -1199,7 +1268,7 @@ export default function HomePage() {
                           justifyContent: 'center',
                           background: '#cff4fc',
                           color: '#087990',
-                          fontSize: '0.9rem',
+                          fontSize: '0.85rem',
                           fontWeight: 800,
                           flexShrink: 0
                         }}>
@@ -1207,28 +1276,29 @@ export default function HomePage() {
                         </div>
 
                         <div>
-                          <span style={{ fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>{doc.name}</span>
-                          <span style={{ fontSize: '0.82rem', color: '#0284c7', fontWeight: 500, marginLeft: '0.5rem' }}>({doc.specialization})</span>
+                          <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>{doc.name}</span>
+                          <span style={{ fontSize: '0.8rem', color: '#0284c7', fontWeight: 500, marginLeft: '0.4rem' }}>({doc.specialization})</span>
                         </div>
                       </div>
 
-                      <button style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                        {isExpanded ? <ChevronUp size={20} color="#0284c7" /> : <ChevronDown size={20} />}
+                      <button type="button" style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                        {isExpanded ? <ChevronUp size={18} color="#0284c7" /> : <ChevronDown size={18} />}
                       </button>
                     </div>
 
                     {/* EXPANDABLE DROPDOWN CONTENT: TIMELINE & DETAILS */}
                     {isExpanded && (
                       <div className="doctor-accordion-content">
-                        <p style={{ fontSize: '0.85rem', color: '#475569', marginBottom: '0.35rem' }}>
+                        <p style={{ fontSize: '0.82rem', color: '#475569', marginBottom: '0.35rem' }}>
                           <strong>Specialization:</strong> {doc.specialization}
                         </p>
-                        <p style={{ fontSize: '0.85rem', color: '#475569', marginBottom: '0.85rem' }}>
+                        <p style={{ fontSize: '0.82rem', color: '#475569', marginBottom: '0.75rem' }}>
                           <strong>Timeline & Available Hours:</strong> {doc.hours} (30-minute consultation slots)
                         </p>
                         <button 
+                          type="button"
                           className="btn-primary"
-                          style={{ fontSize: '0.8rem', padding: '0.45rem 1.1rem', borderRadius: '20px' }}
+                          style={{ fontSize: '0.78rem', padding: '0.4rem 1rem', borderRadius: '20px' }}
                           onClick={() => setIsLoginModalOpen(true)}
                         >
                           Book Appointment with {doc.name}
@@ -1248,13 +1318,13 @@ export default function HomePage() {
         <div className="footer-inner">
           <div className="brand">
             <div className="brand-icon">
-              <Stethoscope size={20} />
+              <Stethoscope size={18} />
             </div>
             <span>AppointmentGuard</span>
           </div>
 
-          <div style={{ color: '#94a3b8', fontSize: '0.82rem' }}>
-            © 2026 AppointmentGuard. All rights reserved. Concurrency Safe Booking Engine.
+          <div style={{ color: '#94a3b8', fontSize: '0.78rem' }}>
+            © 2026 AppointmentGuard. All rights reserved.
           </div>
         </div>
       </footer>
@@ -1263,38 +1333,38 @@ export default function HomePage() {
       {isSettingsModalOpen && currentUser && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.1rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Settings size={20} color="#0284c7" />
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a' }}>Account Settings</h3>
+                <Settings size={18} color="#0284c7" />
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f172a' }}>Account Settings</h3>
               </div>
-              <button className="btn-sm-outline" onClick={() => setIsSettingsModalOpen(false)}>Close</button>
+              <button type="button" className="btn-sm-outline" onClick={() => setIsSettingsModalOpen(false)}>Close</button>
             </div>
 
-            <div style={{ background: '#f8fafc', padding: '0.85rem 1rem', borderRadius: '12px', marginBottom: '1.25rem', border: '1px solid #e2e8f0', fontSize: '0.85rem' }}>
+            <div style={{ background: '#f8fafc', padding: '0.75rem 0.85rem', borderRadius: '12px', marginBottom: '1.1rem', border: '1px solid #e2e8f0', fontSize: '0.82rem' }}>
               <p style={{ color: '#334155' }}><strong>User:</strong> {currentUser.name}</p>
-              <p style={{ color: '#334155', marginTop: '0.25rem' }}><strong>Email:</strong> {currentUser.email}</p>
-              <p style={{ color: '#334155', marginTop: '0.25rem' }}><strong>Role:</strong> {currentUser.role}</p>
+              <p style={{ color: '#334155', marginTop: '0.2rem' }}><strong>Email:</strong> {currentUser.email}</p>
+              <p style={{ color: '#334155', marginTop: '0.2rem' }}><strong>Role:</strong> {currentUser.role}</p>
             </div>
 
-            <h4 style={{ fontSize: '1rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <Key size={16} color="#0284c7" /> Change Password
+            <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <Key size={15} color="#0284c7" /> Change Password
             </h4>
 
             {passwordChangeSuccess && (
-              <div style={{ background: '#dcfce7', border: '1px solid #bbf7d0', color: '#15803d', padding: '0.65rem 0.85rem', borderRadius: '10px', fontSize: '0.82rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <Check size={16} /> {passwordChangeSuccess}
+              <div style={{ background: '#dcfce7', border: '1px solid #bbf7d0', color: '#15803d', padding: '0.6rem 0.75rem', borderRadius: '10px', fontSize: '0.8rem', marginBottom: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Check size={15} /> {passwordChangeSuccess}
               </div>
             )}
 
             {passwordChangeError && (
-              <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b', padding: '0.65rem 0.85rem', borderRadius: '10px', fontSize: '0.82rem', marginBottom: '1rem' }}>
+              <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b', padding: '0.6rem 0.75rem', borderRadius: '10px', fontSize: '0.8rem', marginBottom: '0.85rem' }}>
                 {passwordChangeError}
               </div>
             )}
 
             <form onSubmit={handlePasswordChangeSubmit}>
-              <div style={{ marginBottom: '0.85rem' }}>
+              <div style={{ marginBottom: '0.75rem' }}>
                 <label className="form-label">Current Password</label>
                 <input 
                   type="password" 
@@ -1305,7 +1375,7 @@ export default function HomePage() {
                 />
               </div>
 
-              <div style={{ marginBottom: '0.85rem' }}>
+              <div style={{ marginBottom: '0.75rem' }}>
                 <label className="form-label">New Password</label>
                 <input 
                   type="password" 
@@ -1316,7 +1386,7 @@ export default function HomePage() {
                 />
               </div>
 
-              <div style={{ marginBottom: '1.25rem' }}>
+              <div style={{ marginBottom: '1.1rem' }}>
                 <label className="form-label">Confirm New Password</label>
                 <input 
                   type="password" 
@@ -1327,9 +1397,9 @@ export default function HomePage() {
                 />
               </div>
 
-              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
-                <button type="button" className="btn-outline" style={{ fontSize: '0.85rem', padding: '0.6rem 1.2rem' }} onClick={() => setIsSettingsModalOpen(false)}>Cancel</button>
-                <button type="submit" className="btn-primary" style={{ fontSize: '0.85rem', padding: '0.6rem 1.2rem' }}>Update Password</button>
+              <div style={{ display: 'flex', gap: '0.6rem', justifyContent: 'flex-end' }}>
+                <button type="button" className="btn-outline" style={{ fontSize: '0.8rem', padding: '0.55rem 1rem' }} onClick={() => setIsSettingsModalOpen(false)}>Cancel</button>
+                <button type="submit" className="btn-primary" style={{ fontSize: '0.8rem', padding: '0.55rem 1rem' }}>Update Password</button>
               </div>
             </form>
           </div>
@@ -1340,22 +1410,22 @@ export default function HomePage() {
       {isLoginModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <div style={{ marginBottom: '1.25rem', textAlign: 'center' }}>
-              <div className="brand-icon" style={{ margin: '0 auto 0.75rem' }}>
-                <Lock size={20} />
+            <div style={{ marginBottom: '1.1rem', textAlign: 'center' }}>
+              <div className="brand-icon" style={{ margin: '0 auto 0.65rem' }}>
+                <Lock size={18} />
               </div>
-              <h3 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0f172a' }}>Sign In to AppointmentGuard</h3>
-              <p style={{ fontSize: '0.82rem', color: '#64748b', marginTop: '0.2rem' }}>Enter your credentials to access your dashboard.</p>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a' }}>Sign In to AppointmentGuard</h3>
+              <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.2rem' }}>Enter your credentials to access your dashboard.</p>
             </div>
 
             {authError && (
-              <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b', padding: '0.65rem 0.85rem', borderRadius: '10px', fontSize: '0.82rem', marginBottom: '1rem' }}>
+              <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b', padding: '0.6rem 0.75rem', borderRadius: '10px', fontSize: '0.8rem', marginBottom: '0.85rem' }}>
                 {authError}
               </div>
             )}
 
             <form onSubmit={handleLoginSubmit}>
-              <div style={{ marginBottom: '1rem' }}>
+              <div style={{ marginBottom: '0.85rem' }}>
                 <label className="form-label">Email Address</label>
                 <input 
                   type="email" 
@@ -1366,7 +1436,7 @@ export default function HomePage() {
                 />
               </div>
 
-              <div style={{ marginBottom: '1.25rem' }}>
+              <div style={{ marginBottom: '1.1rem' }}>
                 <label className="form-label">Password</label>
                 <input 
                   type="password" 
@@ -1377,45 +1447,49 @@ export default function HomePage() {
                 />
               </div>
 
-              <button type="submit" className="btn-primary" style={{ width: '100%', borderRadius: '12px', fontSize: '0.9rem' }}>
+              <button type="submit" className="btn-primary" style={{ width: '100%', borderRadius: '10px', fontSize: '0.85rem' }}>
                 Sign In
               </button>
             </form>
 
-            <div style={{ marginTop: '1.5rem', borderTop: '1px solid #f1f5f9', paddingTop: '1rem' }}>
-              <p style={{ fontSize: '0.78rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: '0.6rem', textAlign: 'center' }}>
+            <div style={{ marginTop: '1.25rem', borderTop: '1px solid #f1f5f9', paddingTop: '0.85rem' }}>
+              <p style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: '0.5rem', textAlign: 'center' }}>
                 Quick Demo Accounts (1-Click Login)
               </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                 <button 
+                  type="button"
                   className="btn-sm-outline"
-                  style={{ textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem' }}
+                  style={{ textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.78rem' }}
                   onClick={() => handleQuickDemoLogin('john@patient.com')}
                 >
-                  <span>👤 Patient: john@patient.com</span>
+                  <span>Patient: john@patient.com</span>
                   <span className="role-badge role-patient">Patient</span>
                 </button>
                 <button 
+                  type="button"
                   className="btn-sm-outline"
-                  style={{ textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem' }}
+                  style={{ textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.78rem' }}
                   onClick={() => handleQuickDemoLogin('dr.alice@clinic.com')}
                 >
-                  <span>🩺 Doctor: dr.alice@clinic.com</span>
+                  <span>Doctor: dr.alice@clinic.com</span>
                   <span className="role-badge role-doctor">Doctor</span>
                 </button>
                 <button 
+                  type="button"
                   className="btn-sm-outline"
-                  style={{ textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem' }}
+                  style={{ textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.78rem' }}
                   onClick={() => handleQuickDemoLogin('admin@appointmentguard.com')}
                 >
-                  <span>🛡️ Admin: admin@appointmentguard.com</span>
+                  <span>Admin: admin@appointmentguard.com</span>
                   <span className="role-badge role-admin">Admin</span>
                 </button>
               </div>
             </div>
 
             <button 
-              style={{ width: '100%', marginTop: '1rem', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}
+              type="button"
+              style={{ width: '100%', marginTop: '0.85rem', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem' }}
               onClick={() => setIsLoginModalOpen(false)}
             >
               Close
@@ -1428,12 +1502,12 @@ export default function HomePage() {
       {isBookModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '0.85rem', color: '#0f172a' }}>Confirm Appointment</h3>
-            <p style={{ fontSize: '0.88rem', color: '#64748b', marginBottom: '1.25rem' }}>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '0.75rem', color: '#0f172a' }}>Confirm Appointment</h3>
+            <p style={{ fontSize: '0.82rem', color: '#64748b', marginBottom: '1.1rem' }}>
               Booking 30-minute slot on <strong>{selectedDate}</strong> at <strong>{selectedTimeSlot}</strong>
             </p>
             <form onSubmit={handleBookSubmit}>
-              <div style={{ marginBottom: '1rem' }}>
+              <div style={{ marginBottom: '0.85rem' }}>
                 <label className="form-label">Patient Name</label>
                 <input 
                   type="text" 
@@ -1443,9 +1517,9 @@ export default function HomePage() {
                   required 
                 />
               </div>
-              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '1.25rem' }}>
-                <button type="button" className="btn-outline" style={{ fontSize: '0.85rem', padding: '0.6rem 1.2rem' }} onClick={() => setIsBookModalOpen(false)}>Cancel</button>
-                <button type="submit" className="btn-primary" style={{ fontSize: '0.85rem', padding: '0.6rem 1.2rem' }}>Confirm & Book</button>
+              <div style={{ display: 'flex', gap: '0.6rem', justifyContent: 'flex-end', marginTop: '1.1rem' }}>
+                <button type="button" className="btn-outline" style={{ fontSize: '0.8rem', padding: '0.55rem 1rem' }} onClick={() => setIsBookModalOpen(false)}>Cancel</button>
+                <button type="submit" className="btn-primary" style={{ fontSize: '0.8rem', padding: '0.55rem 1rem' }}>Confirm & Book</button>
               </div>
             </form>
           </div>
@@ -1456,20 +1530,20 @@ export default function HomePage() {
       {isCancelModalOpen && activeApptForAction && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: '#ef4444', marginBottom: '0.85rem' }}>
-              <AlertCircle size={24} />
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f172a' }}>Cancel Appointment</h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ef4444', marginBottom: '0.75rem' }}>
+              <AlertCircle size={22} />
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a' }}>Cancel Appointment</h3>
             </div>
             
-            <p style={{ fontSize: '0.88rem', color: '#64748b', marginBottom: '1rem' }}>
+            <p style={{ fontSize: '0.82rem', color: '#64748b', marginBottom: '0.85rem' }}>
               Are you sure you want to cancel appointment <strong>{activeApptForAction.id}</strong> with {activeApptForAction.doctorName}?
             </p>
 
-            <div style={{ marginBottom: '1.25rem' }}>
+            <div style={{ marginBottom: '1.1rem' }}>
               <label className="form-label">Reason for Cancellation (Required)</label>
               <textarea 
                 className="form-input"
-                style={{ height: '75px', resize: 'none', fontSize: '0.85rem' }}
+                style={{ height: '70px', resize: 'none', fontSize: '0.8rem' }}
                 value={cancellationReasonInput}
                 onChange={(e) => setCancellationReasonInput(e.target.value)}
                 placeholder="e.g. Schedule conflict, feeling better, doctor emergency"
@@ -1477,13 +1551,13 @@ export default function HomePage() {
               />
             </div>
 
-            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
-              <button type="button" className="btn-outline" style={{ fontSize: '0.85rem', padding: '0.6rem 1.2rem' }} onClick={() => setIsCancelModalOpen(false)}>Back</button>
+            <div style={{ display: 'flex', gap: '0.6rem', justifyContent: 'flex-end' }}>
+              <button type="button" className="btn-outline" style={{ fontSize: '0.8rem', padding: '0.55rem 1rem' }} onClick={() => setIsCancelModalOpen(false)}>Back</button>
               <button 
                 type="button" 
                 className="btn-danger"
                 disabled={!cancellationReasonInput.trim()}
-                style={{ opacity: cancellationReasonInput.trim() ? 1 : 0.6, fontSize: '0.85rem', padding: '0.6rem 1.2rem' }}
+                style={{ opacity: cancellationReasonInput.trim() ? 1 : 0.6, fontSize: '0.8rem', padding: '0.55rem 1rem' }}
                 onClick={handleConfirmCancel}
               >
                 Confirm Cancellation
@@ -1497,12 +1571,12 @@ export default function HomePage() {
       {isRescheduleModalOpen && activeApptForAction && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '0.4rem', color: '#0f172a' }}>Reschedule Appointment</h3>
-            <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '1.25rem' }}>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '0.35rem', color: '#0f172a' }}>Reschedule Appointment</h3>
+            <p style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '1.1rem' }}>
               Currently: <strong>{activeApptForAction.date} at {activeApptForAction.time}</strong>
             </p>
 
-            <div style={{ marginBottom: '1rem' }}>
+            <div style={{ marginBottom: '0.85rem' }}>
               <label className="form-label">Select New Date</label>
               <input 
                 type="date" 
@@ -1512,11 +1586,12 @@ export default function HomePage() {
               />
             </div>
 
-            <div className="slots-container" style={{ marginTop: '1rem' }}>
+            <div className="slots-container" style={{ marginTop: '0.85rem' }}>
               <div className="slots-title">Select New Time Slot</div>
               <div className="slots-grid">
                 {DEFAULT_TIME_SLOTS.map(slot => (
                   <button
+                    type="button"
                     key={slot.time}
                     className={`slot-chip ${rescheduleTimeSlot === slot.time ? 'selected' : ''}`}
                     onClick={() => setRescheduleTimeSlot(slot.time)}
@@ -1527,13 +1602,13 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '1.25rem' }}>
-              <button type="button" className="btn-outline" style={{ fontSize: '0.85rem', padding: '0.6rem 1.2rem' }} onClick={() => setIsRescheduleModalOpen(false)}>Cancel</button>
+            <div style={{ display: 'flex', gap: '0.6rem', justifyContent: 'flex-end', marginTop: '1.1rem' }}>
+              <button type="button" className="btn-outline" style={{ fontSize: '0.8rem', padding: '0.55rem 1rem' }} onClick={() => setIsRescheduleModalOpen(false)}>Cancel</button>
               <button 
                 type="button" 
                 className="btn-primary"
                 disabled={!rescheduleTimeSlot}
-                style={{ opacity: rescheduleTimeSlot ? 1 : 0.6, fontSize: '0.85rem', padding: '0.6rem 1.2rem' }}
+                style={{ opacity: rescheduleTimeSlot ? 1 : 0.6, fontSize: '0.8rem', padding: '0.55rem 1rem' }}
                 onClick={handleConfirmReschedule}
               >
                 Confirm Reschedule
@@ -1543,17 +1618,17 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* DOCTOR TIME-OFF MODAL */}
+      {/* DOCTOR SET TIME-OFF MODAL */}
       {isTimeOffModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: '#f59e0b', marginBottom: '0.85rem' }}>
-              <AlertTriangle size={24} />
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f172a' }}>Log Emergency Time-Off</h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#0284c7', marginBottom: '0.75rem' }}>
+              <Calendar size={22} />
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a' }}>Set Time-Off</h3>
             </div>
 
             <form onSubmit={handleConfirmTimeOff}>
-              <div style={{ marginBottom: '0.85rem' }}>
+              <div style={{ marginBottom: '0.75rem' }}>
                 <label className="form-label">Start Date & Time</label>
                 <input 
                   type="datetime-local" 
@@ -1564,7 +1639,7 @@ export default function HomePage() {
                 />
               </div>
 
-              <div style={{ marginBottom: '0.85rem' }}>
+              <div style={{ marginBottom: '0.75rem' }}>
                 <label className="form-label">End Date & Time</label>
                 <input 
                   type="datetime-local" 
@@ -1575,25 +1650,21 @@ export default function HomePage() {
                 />
               </div>
 
-              <div style={{ marginBottom: '1.25rem' }}>
-                <label className="form-label">Emergency Reason</label>
+              <div style={{ marginBottom: '1.1rem' }}>
+                <label className="form-label">Reason</label>
                 <input 
                   type="text" 
                   className="form-input"
                   value={timeOffReason}
                   onChange={(e) => setTimeOffReason(e.target.value)}
-                  placeholder="e.g. Medical emergency, Urgent leave"
+                  placeholder="e.g. Personal Leave, Conference, Vacation"
                   required
                 />
               </div>
 
-              <div style={{ background: '#fffbeb', border: '1px solid #fde68a', color: '#b45309', padding: '0.75rem', borderRadius: '10px', fontSize: '0.82rem', marginBottom: '1.25rem' }}>
-                ⚠️ <strong>Concurrency Safeguard Notice:</strong> Submitting will automatically cancel impacted patient appointments and notify patients.
-              </div>
-
-              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
-                <button type="button" className="btn-outline" style={{ fontSize: '0.85rem', padding: '0.6rem 1.2rem' }} onClick={() => setIsTimeOffModalOpen(false)}>Cancel</button>
-                <button type="submit" className="btn-warning" style={{ fontSize: '0.85rem', padding: '0.6rem 1.2rem' }}>Log & Notify Patients</button>
+              <div style={{ display: 'flex', gap: '0.6rem', justifyContent: 'flex-end' }}>
+                <button type="button" className="btn-outline" style={{ fontSize: '0.8rem', padding: '0.55rem 1rem' }} onClick={() => setIsTimeOffModalOpen(false)}>Cancel</button>
+                <button type="submit" className="btn-primary" style={{ fontSize: '0.8rem', padding: '0.55rem 1rem' }}>Set Time-Off</button>
               </div>
             </form>
           </div>

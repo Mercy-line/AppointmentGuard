@@ -24,6 +24,7 @@
   margin: 0;
   padding: 0;
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  touch-action: manipulation;
 }
 
 html {
@@ -46,7 +47,7 @@ body {
   border-bottom: 1px solid var(--border-color);
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 1000;
   padding: 1rem 4rem;
   display: flex;
   justify-content: space-between;
@@ -63,6 +64,15 @@ body {
   color: var(--text-dark);
   text-decoration: none;
   cursor: pointer;
+  pointer-events: auto;
+}
+
+.brand-title-mobile {
+  display: none;
+}
+
+.brand-title-desktop {
+  display: inline;
 }
 
 .brand-icon {
@@ -92,6 +102,7 @@ body {
   font-size: 0.92rem;
   transition: color 0.2s ease;
   cursor: pointer;
+  pointer-events: auto;
 }
 
 .nav-link:hover, .nav-link.active {
@@ -101,40 +112,61 @@ body {
 /* Mobile Toggle Hamburger Button */
 .mobile-menu-toggle {
   display: none;
-  background: none;
-  border: none;
+  background: #f1f5f9;
+  border: 1px solid var(--border-color);
   color: var(--text-dark);
   cursor: pointer;
-  padding: 0.4rem;
-  border-radius: 8px;
+  pointer-events: auto;
+  padding: 0.45rem 0.65rem;
+  border-radius: 10px;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
 }
 
 .mobile-menu-toggle:hover {
-  background: #f1f5f9;
+  background: #e2e8f0;
 }
 
-/* Mobile Menu Dropdown Drawer */
+/* Mobile Menu Dropdown Overlay Drawer */
 .mobile-menu-drawer {
+  position: fixed;
+  top: 60px;
+  left: 0;
+  right: 0;
+  z-index: 9999;
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
   background: #ffffff;
-  padding: 1rem;
-  border-bottom: 1px solid var(--border-color);
-  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+  padding: 1.1rem;
+  border-bottom: 2px solid var(--border-color);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+  animation: slideDown 0.2s ease-out;
+  pointer-events: auto;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .mobile-nav-link {
+  width: 100%;
   text-decoration: none;
   color: #334155;
-  font-weight: 500;
-  font-size: 0.82rem;
-  padding: 0.55rem 0.75rem;
-  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
   background: #f8fafc;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  cursor: pointer;
+  pointer-events: auto;
+  border: 1px solid var(--border-color);
+  text-align: left;
 }
 
 .mobile-nav-link:hover {
@@ -193,8 +225,8 @@ body {
 }
 
 .dashboard-tab-btn {
-  flex: 1 1 200px;
-  min-width: 160px;
+  flex: 1 1 180px;
+  min-width: 140px;
   border-radius: 12px;
   padding: 0.85rem 1.25rem;
   font-weight: 700;
@@ -204,8 +236,17 @@ body {
   justify-content: center;
   gap: 0.5rem;
   cursor: pointer;
+  pointer-events: auto;
   transition: all 0.2s ease;
   border: 1.5px solid transparent;
+}
+
+.tab-label-mobile {
+  display: none;
+}
+
+.tab-label-desktop {
+  display: inline;
 }
 
 /* Dashboard Banner */
@@ -243,6 +284,7 @@ body {
   font-size: 0.88rem;
   border: none;
   cursor: pointer;
+  pointer-events: auto;
   transition: all 0.2s ease;
   text-decoration: none;
 }
@@ -261,6 +303,7 @@ body {
   font-size: 0.82rem;
   border: 1px solid var(--border-color);
   cursor: pointer;
+  pointer-events: auto;
   white-space: nowrap;
 }
 
@@ -278,6 +321,7 @@ body {
   font-size: 0.95rem;
   border: none;
   cursor: pointer;
+  pointer-events: auto;
   transition: all 0.2s ease;
   display: inline-flex;
   align-items: center;
@@ -300,6 +344,7 @@ body {
   font-weight: 700;
   font-size: 0.95rem;
   cursor: pointer;
+  pointer-events: auto;
   transition: all 0.2s ease;
   display: inline-flex;
   align-items: center;
@@ -321,6 +366,7 @@ body {
   font-size: 0.85rem;
   border: none;
   cursor: pointer;
+  pointer-events: auto;
 }
 
 .btn-danger:hover {
@@ -336,6 +382,7 @@ body {
   font-size: 0.85rem;
   border: none;
   cursor: pointer;
+  pointer-events: auto;
   white-space: nowrap;
 }
 
@@ -351,6 +398,7 @@ body {
   font-weight: 600;
   font-size: 0.82rem;
   cursor: pointer;
+  pointer-events: auto;
   transition: all 0.2s ease;
   white-space: nowrap;
 }
@@ -373,8 +421,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 10000;
   padding: 1rem;
+  pointer-events: auto;
 }
 
 .modal-content {
@@ -386,6 +435,7 @@ body {
   box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
   max-height: 90vh;
   overflow-y: auto;
+  pointer-events: auto;
 }
 
 /* Section Styling */
@@ -532,6 +582,7 @@ body {
   font-weight: 600;
   font-size: 0.88rem;
   cursor: pointer;
+  pointer-events: auto;
   transition: all 0.2s ease;
   color: var(--text-dark);
 }
@@ -574,6 +625,7 @@ body {
   justify-content: space-between;
   align-items: center;
   cursor: pointer;
+  pointer-events: auto;
   background: #ffffff;
 }
 
@@ -687,7 +739,7 @@ body {
 /* Tablets & Small Laptops (<= 1024px) */
 @media (max-width: 1024px) {
   .navbar {
-    padding: 0.85rem 2rem;
+    padding: 0.85rem 1.5rem;
   }
   .dashboard-container {
     padding: 2rem 1.5rem;
@@ -717,8 +769,8 @@ body {
   }
 }
 
-/* Mobile Screens (< 768px) - LIGHTER FONT WEIGHT & REDUCED FONT SIZES */
-@media (max-width: 768px) {
+/* Mobile Screens (< 850px) - SHOW HAMBURGER TOGGLE */
+@media (max-width: 850px) {
   body {
     font-size: 0.82rem;
     line-height: 1.45;
@@ -727,7 +779,21 @@ body {
     display: none !important;
   }
   .mobile-menu-toggle {
-    display: block !important;
+    display: flex !important;
+  }
+  .brand-title-desktop {
+    display: none !important;
+  }
+  .brand-title-mobile {
+    display: inline !important;
+    font-size: 1.05rem;
+    font-weight: 700;
+  }
+  .tab-label-desktop {
+    display: none !important;
+  }
+  .tab-label-mobile {
+    display: inline !important;
   }
   .navbar {
     padding: 0.65rem 0.85rem;
@@ -740,112 +806,125 @@ body {
     width: 34px;
     height: 34px;
   }
-  .dashboard-container {
-    padding: 1rem 0.65rem;
-  }
-  .dashboard-tabs {
-    flex-direction: column;
-    padding: 0.5rem;
-    gap: 0.4rem;
-  }
-  .dashboard-tab-btn {
-    width: 100%;
-    min-width: 100%;
-    padding: 0.65rem 0.75rem;
-    font-size: 0.8rem;
-    font-weight: 600;
-  }
+
+  /* HIDE WELCOME CARD IN MOBILE VIEW */
   .dash-banner {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 1.1rem 0.85rem;
-    border-radius: 16px;
+    display: none !important;
   }
-  .dash-banner h1 {
-    font-size: 1.2rem;
-    font-weight: 700;
+
+  .dashboard-container {
+    padding: 0.85rem 0.35rem;
   }
-  .dash-banner p {
-    font-size: 0.78rem;
-    font-weight: 500;
+
+  /* DASHBOARD BUTTONS ARRANGED SIDE-BY-SIDE IN 1 SINGLE ROW GRID ON MOBILE */
+  .dashboard-tabs {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 0.3rem !important;
+    padding: 0.3rem !important;
+    margin-bottom: 1rem !important;
+    border-radius: 12px !important;
+    background: #ffffff !important;
+    width: 100% !important;
   }
+
+  .dashboard-tabs-2 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .dashboard-tab-btn {
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 0.5rem 0.2rem !important;
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    border-radius: 8px !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.25rem !important;
+  }
+
   .section {
-    padding: 2.2rem 0.85rem;
+    padding: 2rem 0.75rem;
     min-height: auto;
   }
   .section-title {
-    font-size: 1.3rem;
+    font-size: 1.25rem;
     font-weight: 700;
   }
   .section-subtitle {
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     font-weight: 500;
   }
   .hero-title {
-    font-size: 1.55rem;
+    font-size: 1.45rem;
     font-weight: 700;
   }
   .hero-subtitle {
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     font-weight: 500;
-    margin: 0.85rem 0 1.5rem;
+    margin: 0.75rem 0 1.25rem;
   }
   .btn-primary, .btn-outline, .btn-login {
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     font-weight: 600;
-    padding: 0.65rem 1rem;
+    padding: 0.6rem 0.85rem;
     width: 100%;
   }
   .search-card {
-    padding: 1rem;
-    border-radius: 16px;
+    padding: 0.85rem;
+    border-radius: 14px;
   }
   .search-grid {
     grid-template-columns: 1fr;
-    gap: 0.85rem;
+    gap: 0.75rem;
   }
   .form-select, .form-input {
-    font-size: 0.82rem;
-    padding: 0.65rem 0.85rem;
+    font-size: 0.8rem;
+    padding: 0.6rem 0.75rem;
   }
   .cards-grid-3, .cards-grid-4, .services-grid {
     grid-template-columns: 1fr;
-    gap: 1rem;
+    gap: 0.85rem;
   }
   .feature-card {
-    padding: 1.25rem;
-    border-radius: 16px;
+    padding: 1rem;
+    border-radius: 14px;
   }
   .feature-title {
-    font-size: 0.98rem;
+    font-size: 0.95rem;
     font-weight: 700;
   }
   .feature-desc {
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     font-weight: 400;
   }
   .doctor-accordion-header {
-    padding: 0.75rem 1rem;
+    padding: 0.7rem 0.85rem;
   }
   .doctor-accordion-content {
-    padding: 1rem;
-    font-size: 0.8rem;
+    padding: 0.85rem;
+    font-size: 0.78rem;
   }
   .hero-card-img {
-    padding: 0.75rem;
+    padding: 0.65rem;
   }
   .modal-content {
-    padding: 1.1rem;
-    font-size: 0.82rem;
-    border-radius: 18px;
+    padding: 1rem;
+    font-size: 0.8rem;
+    border-radius: 16px;
   }
   .footer {
-    padding: 1.5rem 0.85rem;
+    padding: 1.25rem 0.75rem;
   }
   .footer-inner {
     flex-direction: column;
     text-align: center;
-    font-size: 0.78rem;
+    font-size: 0.75rem;
     font-weight: 500;
   }
 }
@@ -853,30 +932,30 @@ body {
 /* Small Mobile Phones (< 480px) */
 @media (max-width: 480px) {
   .brand {
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 700;
   }
   .brand-icon {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
   }
   .user-pill {
     width: 100%;
     justify-content: center;
-    font-size: 0.78rem;
+    font-size: 0.75rem;
     font-weight: 600;
   }
   .btn-primary, .btn-outline {
     width: 100%;
-    padding: 0.6rem 0.85rem;
-    font-size: 0.8rem;
+    padding: 0.55rem 0.75rem;
+    font-size: 0.78rem;
     font-weight: 600;
   }
   .slot-chip {
     width: 100%;
     text-align: center;
-    font-size: 0.78rem;
+    font-size: 0.75rem;
     font-weight: 500;
-    padding: 0.5rem;
+    padding: 0.45rem;
   }
 }
