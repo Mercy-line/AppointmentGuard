@@ -382,7 +382,7 @@ export default function HomePage() {
       {currentView === 'DASHBOARD' && currentUser ? (
         
         /* ROLE-BASED DASHBOARD VIEW */
-        <div style={{ flex: 1, padding: '3rem 4rem', backgroundColor: '#f8fafc' }}>
+        <div className="dashboard-container">
           
           {/* WELCOME BANNER */}
           <div className="dash-banner">
@@ -404,15 +404,10 @@ export default function HomePage() {
 
           {/* PATIENT ACTION BUTTON TABS BELOW WELCOME CARD */}
           {currentUser.role === 'PATIENT' && (
-            <div style={{ 
-              display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '2.5rem', 
-              background: 'white', padding: '1rem', borderRadius: '16px', border: '1px solid #e2e8f0',
-              boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)'
-            }}>
+            <div className="dashboard-tabs">
               <button
-                className={`btn-primary ${patientFilterTab === 'BOOK_NEW' ? '' : 'btn-outline'}`}
+                className={`dashboard-tab-btn ${patientFilterTab === 'BOOK_NEW' ? 'btn-primary' : 'btn-outline'}`}
                 style={{ 
-                  flex: 1, minWidth: '180px', borderRadius: '12px', padding: '0.85rem 1.25rem',
                   background: patientFilterTab === 'BOOK_NEW' ? '#0284c7' : 'white',
                   color: patientFilterTab === 'BOOK_NEW' ? 'white' : '#1e293b'
                 }}
@@ -422,9 +417,8 @@ export default function HomePage() {
               </button>
 
               <button
-                className={`btn-primary ${patientFilterTab === 'SCHEDULED' ? '' : 'btn-outline'}`}
+                className={`dashboard-tab-btn ${patientFilterTab === 'SCHEDULED' ? 'btn-primary' : 'btn-outline'}`}
                 style={{ 
-                  flex: 1, minWidth: '220px', borderRadius: '12px', padding: '0.85rem 1.25rem',
                   background: patientFilterTab === 'SCHEDULED' ? '#0284c7' : 'white',
                   color: patientFilterTab === 'SCHEDULED' ? 'white' : '#1e293b'
                 }}
@@ -434,9 +428,8 @@ export default function HomePage() {
               </button>
 
               <button
-                className={`btn-primary ${patientFilterTab === 'CANCELLED' ? '' : 'btn-outline'}`}
+                className={`dashboard-tab-btn ${patientFilterTab === 'CANCELLED' ? 'btn-primary' : 'btn-outline'}`}
                 style={{ 
-                  flex: 1, minWidth: '180px', borderRadius: '12px', padding: '0.85rem 1.25rem',
                   background: patientFilterTab === 'CANCELLED' ? '#ef4444' : 'white',
                   color: patientFilterTab === 'CANCELLED' ? 'white' : '#1e293b',
                   borderColor: patientFilterTab === 'CANCELLED' ? '#ef4444' : '#e2e8f0'
@@ -450,15 +443,10 @@ export default function HomePage() {
 
           {/* DOCTOR ACTION BUTTON TABS BELOW WELCOME CARD */}
           {currentUser.role === 'DOCTOR' && (
-            <div style={{ 
-              display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '2.5rem', 
-              background: 'white', padding: '1rem', borderRadius: '16px', border: '1px solid #e2e8f0',
-              boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)'
-            }}>
+            <div className="dashboard-tabs">
               <button
-                className={`btn-primary ${doctorFilterTab === 'DOCTOR_QUEUE' ? '' : 'btn-outline'}`}
+                className={`dashboard-tab-btn ${doctorFilterTab === 'DOCTOR_QUEUE' ? 'btn-primary' : 'btn-outline'}`}
                 style={{ 
-                  flex: 1, minWidth: '220px', borderRadius: '12px', padding: '0.85rem 1.25rem',
                   background: doctorFilterTab === 'DOCTOR_QUEUE' ? '#0284c7' : 'white',
                   color: doctorFilterTab === 'DOCTOR_QUEUE' ? 'white' : '#1e293b'
                 }}
@@ -468,9 +456,8 @@ export default function HomePage() {
               </button>
 
               <button
-                className={`btn-primary ${doctorFilterTab === 'DOCTOR_CANCELLED' ? '' : 'btn-outline'}`}
+                className={`dashboard-tab-btn ${doctorFilterTab === 'DOCTOR_CANCELLED' ? 'btn-primary' : 'btn-outline'}`}
                 style={{ 
-                  flex: 1, minWidth: '220px', borderRadius: '12px', padding: '0.85rem 1.25rem',
                   background: doctorFilterTab === 'DOCTOR_CANCELLED' ? '#ef4444' : 'white',
                   color: doctorFilterTab === 'DOCTOR_CANCELLED' ? 'white' : '#1e293b',
                   borderColor: doctorFilterTab === 'DOCTOR_CANCELLED' ? '#ef4444' : '#e2e8f0'
@@ -484,15 +471,10 @@ export default function HomePage() {
 
           {/* ADMIN ACTION BUTTON TABS BELOW WELCOME CARD */}
           {currentUser.role === 'ADMIN' && (
-            <div style={{ 
-              display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '2.5rem', 
-              background: 'white', padding: '1rem', borderRadius: '16px', border: '1px solid #e2e8f0',
-              boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)'
-            }}>
+            <div className="dashboard-tabs">
               <button
-                className={`btn-primary ${adminFilterTab === 'ADMIN_DOCTORS' ? '' : 'btn-outline'}`}
+                className={`dashboard-tab-btn ${adminFilterTab === 'ADMIN_DOCTORS' ? 'btn-primary' : 'btn-outline'}`}
                 style={{ 
-                  flex: 1, minWidth: '240px', borderRadius: '12px', padding: '0.85rem 1.25rem',
                   background: adminFilterTab === 'ADMIN_DOCTORS' ? '#0284c7' : 'white',
                   color: adminFilterTab === 'ADMIN_DOCTORS' ? 'white' : '#1e293b'
                 }}
@@ -502,9 +484,8 @@ export default function HomePage() {
               </button>
 
               <button
-                className={`btn-primary ${adminFilterTab === 'ADMIN_OVERVIEW' ? '' : 'btn-outline'}`}
+                className={`dashboard-tab-btn ${adminFilterTab === 'ADMIN_OVERVIEW' ? 'btn-primary' : 'btn-outline'}`}
                 style={{ 
-                  flex: 1, minWidth: '200px', borderRadius: '12px', padding: '0.85rem 1.25rem',
                   background: adminFilterTab === 'ADMIN_OVERVIEW' ? '#0284c7' : 'white',
                   color: adminFilterTab === 'ADMIN_OVERVIEW' ? 'white' : '#1e293b'
                 }}
@@ -514,9 +495,8 @@ export default function HomePage() {
               </button>
 
               <button
-                className={`btn-primary ${adminFilterTab === 'ADMIN_APPOINTMENTS' ? '' : 'btn-outline'}`}
+                className={`dashboard-tab-btn ${adminFilterTab === 'ADMIN_APPOINTMENTS' ? 'btn-primary' : 'btn-outline'}`}
                 style={{ 
-                  flex: 1, minWidth: '220px', borderRadius: '12px', padding: '0.85rem 1.25rem',
                   background: adminFilterTab === 'ADMIN_APPOINTMENTS' ? '#0284c7' : 'white',
                   color: adminFilterTab === 'ADMIN_APPOINTMENTS' ? 'white' : '#1e293b'
                 }}
@@ -529,40 +509,40 @@ export default function HomePage() {
 
           {/* ADMIN OVERVIEW METRICS CARDS */}
           {currentUser.role === 'ADMIN' && adminFilterTab === 'ADMIN_OVERVIEW' && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
-              <div style={{ background: 'white', padding: '1.75rem', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '2.5rem' }}>
+              <div style={{ background: 'white', padding: '1.5rem', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#0284c7', marginBottom: '0.5rem' }}>
-                  <span style={{ fontSize: '0.9rem', fontWeight: 700, textTransform: 'uppercase' }}>Total Appointments</span>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase' }}>Total Appointments</span>
                   <Calendar size={22} />
                 </div>
-                <h3 style={{ fontSize: '2.2rem', fontWeight: 800, color: '#0f172a' }}>{appointments.length}</h3>
+                <h3 style={{ fontSize: '2rem', fontWeight: 800, color: '#0f172a' }}>{appointments.length}</h3>
                 <p style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '0.3rem' }}>All-time bookings log</p>
               </div>
 
-              <div style={{ background: 'white', padding: '1.75rem', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)' }}>
+              <div style={{ background: 'white', padding: '1.5rem', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#059669', marginBottom: '0.5rem' }}>
-                  <span style={{ fontSize: '0.9rem', fontWeight: 700, textTransform: 'uppercase' }}>Active Doctors</span>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase' }}>Active Doctors</span>
                   <Users size={22} />
                 </div>
-                <h3 style={{ fontSize: '2.2rem', fontWeight: 800, color: '#0f172a' }}>{INITIAL_DOCTORS.length}</h3>
+                <h3 style={{ fontSize: '2rem', fontWeight: 800, color: '#0f172a' }}>{INITIAL_DOCTORS.length}</h3>
                 <p style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '0.3rem' }}>Across 5 specialties</p>
               </div>
 
-              <div style={{ background: 'white', padding: '1.75rem', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)' }}>
+              <div style={{ background: 'white', padding: '1.5rem', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#166534', marginBottom: '0.5rem' }}>
-                  <span style={{ fontSize: '0.9rem', fontWeight: 700, textTransform: 'uppercase' }}>Confirmed Visits</span>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase' }}>Confirmed Visits</span>
                   <CheckCircle2 size={22} />
                 </div>
-                <h3 style={{ fontSize: '2.2rem', fontWeight: 800, color: '#0f172a' }}>{appointments.filter(a => a.status === 'CONFIRMED').length}</h3>
+                <h3 style={{ fontSize: '2rem', fontWeight: 800, color: '#0f172a' }}>{appointments.filter(a => a.status === 'CONFIRMED').length}</h3>
                 <p style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '0.3rem' }}>Active scheduled slots</p>
               </div>
 
-              <div style={{ background: 'white', padding: '1.75rem', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)' }}>
+              <div style={{ background: 'white', padding: '1.5rem', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#dc2626', marginBottom: '0.5rem' }}>
-                  <span style={{ fontSize: '0.9rem', fontWeight: 700, textTransform: 'uppercase' }}>Cancelled Visits</span>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase' }}>Cancelled Visits</span>
                   <AlertCircle size={22} />
                 </div>
-                <h3 style={{ fontSize: '2.2rem', fontWeight: 800, color: '#0f172a' }}>{appointments.filter(a => a.status === 'CANCELLED').length}</h3>
+                <h3 style={{ fontSize: '2rem', fontWeight: 800, color: '#0f172a' }}>{appointments.filter(a => a.status === 'CANCELLED').length}</h3>
                 <p style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '0.3rem' }}>Cancelled / emergency time-off</p>
               </div>
             </div>
@@ -578,7 +558,7 @@ export default function HomePage() {
                   Select a Doctor to View Their Assigned Appointments:
                 </h3>
 
-                <div style={{ display: 'flex', gap: '0.85rem', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                   {INITIAL_DOCTORS.map(doc => {
                     const docApptCount = appointments.filter(a => a.doctorId === doc.id || a.doctorName.includes(doc.name)).length;
                     const isSelected = doc.id === selectedAdminDoctor.id;
@@ -589,16 +569,17 @@ export default function HomePage() {
                         style={{
                           display: 'flex',
                           alignItems: 'center',
-                          gap: '0.6rem',
-                          padding: '0.75rem 1.4rem',
+                          gap: '0.5rem',
+                          padding: '0.65rem 1.25rem',
                           borderRadius: '30px',
                           border: `2px solid ${isSelected ? '#0284c7' : '#e2e8f0'}`,
                           background: isSelected ? '#e0f2fe' : 'white',
                           color: isSelected ? '#0369a1' : '#334155',
                           fontWeight: isSelected ? 800 : 600,
-                          fontSize: '0.95rem',
+                          fontSize: '0.9rem',
                           cursor: 'pointer',
-                          transition: 'all 0.2s ease'
+                          transition: 'all 0.2s ease',
+                          flexWrap: 'nowrap'
                         }}
                       >
                         <span>🩺 {doc.name}</span>
@@ -619,23 +600,23 @@ export default function HomePage() {
               </div>
 
               {/* SELECTED DOCTOR APPOINTMENTS CARD */}
-              <div style={{ background: 'white', borderRadius: '18px', padding: '2rem', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+              <div style={{ background: 'white', borderRadius: '18px', padding: '1.75rem', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
                 
                 {/* Selected Doctor Profile Header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', paddingBottom: '1.25rem', borderBottom: '1px solid #e2e8f0' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem', paddingBottom: '1.25rem', borderBottom: '1px solid #e2e8f0' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
                     <div className="doctor-avatar" style={{ margin: 0, width: '56px', height: '56px', fontSize: '1.3rem' }}>
                       {selectedAdminDoctor.avatarInitials}
                     </div>
                     <div>
-                      <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0f172a' }}>{selectedAdminDoctor.name}</h2>
-                      <p style={{ fontSize: '0.95rem', color: '#0284c7', fontWeight: 600, marginTop: '0.2rem' }}>
+                      <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0f172a' }}>{selectedAdminDoctor.name}</h2>
+                      <p style={{ fontSize: '0.9rem', color: '#0284c7', fontWeight: 600, marginTop: '0.2rem' }}>
                         {selectedAdminDoctor.specialization} • {selectedAdminDoctor.hours}
                       </p>
                     </div>
                   </div>
 
-                  <div style={{ textAlign: 'right' }}>
+                  <div style={{ textAlign: 'left' }}>
                     <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Assigned Appointments</span>
                     <h3 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#0f172a' }}>{selectedDoctorAppointments.length}</h3>
                   </div>
@@ -653,19 +634,19 @@ export default function HomePage() {
                       <div 
                         key={appt.id} 
                         style={{ 
-                          padding: '1.5rem', 
+                          padding: '1.25rem', 
                           border: '1px solid #e2e8f0', 
                           borderRadius: '14px', 
                           background: '#ffffff'
                         }}
                       >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.5rem' }}>
                           <div>
                             <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#0284c7', textTransform: 'uppercase' }}>Ref: {appt.id}</span>
-                            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f172a', margin: '0.2rem 0' }}>
+                            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', margin: '0.2rem 0' }}>
                               Patient: {appt.patientName}
                             </h3>
-                            <p style={{ fontSize: '0.9rem', color: '#64748b' }}>
+                            <p style={{ fontSize: '0.88rem', color: '#64748b' }}>
                               Doctor: {appt.doctorName} ({appt.specialization})
                             </p>
                           </div>
@@ -675,7 +656,7 @@ export default function HomePage() {
                           </span>
                         </div>
 
-                        <div style={{ display: 'flex', gap: '1.5rem', marginTop: '1rem', color: '#334155', fontSize: '0.95rem', fontWeight: 600 }}>
+                        <div style={{ display: 'flex', gap: '1.25rem', marginTop: '0.85rem', color: '#334155', fontSize: '0.9rem', fontWeight: 600, flexWrap: 'wrap' }}>
                           <span>📅 {appt.date}</span>
                           <span>🕒 {appt.time} (30 mins)</span>
                         </div>
@@ -687,7 +668,7 @@ export default function HomePage() {
                         )}
 
                         {appt.status !== 'CANCELLED' && (
-                          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem', justifyContent: 'flex-end' }}>
+                          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                             <button 
                               className="btn-sm-outline"
                               onClick={() => {
@@ -725,7 +706,7 @@ export default function HomePage() {
               
               {/* PATIENT BOOKING SEARCH CARD */}
               {(currentUser.role === 'PATIENT' && patientFilterTab === 'BOOK_NEW') && (
-                <div className="search-card" style={{ maxWidth: '100%' }}>
+                <div className="search-card">
                   <h3 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0f172a', marginBottom: '1.25rem' }}>
                     Book a New Appointment
                   </h3>
@@ -787,9 +768,9 @@ export default function HomePage() {
 
               {/* APPOINTMENTS LIST CARD */}
               {(currentUser.role !== 'PATIENT' || patientFilterTab !== 'BOOK_NEW') && (
-                <div style={{ background: 'white', borderRadius: '18px', padding: '2rem', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                    <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0f172a' }}>
+                <div style={{ background: 'white', borderRadius: '18px', padding: '1.75rem', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0f172a' }}>
                       {currentUser.role === 'PATIENT' && (
                         patientFilterTab === 'SCHEDULED' ? 'My Scheduled Appointments' : 'Cancelled Appointments'
                       )}
@@ -798,7 +779,7 @@ export default function HomePage() {
                       )}
                       {currentUser.role === 'ADMIN' && 'System Appointments Master Log'}
                     </h2>
-                    <span style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 600 }}>{visibleAppointments.length} Records</span>
+                    <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>{visibleAppointments.length} Records</span>
                   </div>
 
                   {visibleAppointments.length === 0 ? (
@@ -812,20 +793,20 @@ export default function HomePage() {
                         <div 
                           key={appt.id} 
                           style={{ 
-                            padding: '1.5rem', 
+                            padding: '1.25rem', 
                             border: '1px solid #e2e8f0', 
                             borderRadius: '14px', 
                             background: '#ffffff',
                             borderColor: '#e2e8f0'
                           }}
                         >
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.5rem' }}>
                             <div>
                               <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#0284c7', textTransform: 'uppercase' }}>Ref: {appt.id}</span>
-                              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f172a', margin: '0.2rem 0' }}>
+                              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', margin: '0.2rem 0' }}>
                                 {currentUser.role === 'PATIENT' ? appt.doctorName : `Patient: ${appt.patientName}`}
                               </h3>
-                              <p style={{ fontSize: '0.9rem', color: '#64748b' }}>
+                              <p style={{ fontSize: '0.88rem', color: '#64748b' }}>
                                 {currentUser.role === 'PATIENT' ? appt.specialization : `Assigned Doctor: ${appt.doctorName}`}
                               </p>
                             </div>
@@ -835,7 +816,7 @@ export default function HomePage() {
                             </span>
                           </div>
 
-                          <div style={{ display: 'flex', gap: '1.5rem', marginTop: '1rem', color: '#334155', fontSize: '0.95rem', fontWeight: 600 }}>
+                          <div style={{ display: 'flex', gap: '1.25rem', marginTop: '0.85rem', color: '#334155', fontSize: '0.9rem', fontWeight: 600, flexWrap: 'wrap' }}>
                             <span>📅 {appt.date}</span>
                             <span>🕒 {appt.time} (30 mins)</span>
                           </div>
@@ -847,7 +828,7 @@ export default function HomePage() {
                           )}
 
                           {appt.status !== 'CANCELLED' && (
-                            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem', justifyContent: 'flex-end' }}>
+                            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                               <button 
                                 className="btn-sm-outline"
                                 onClick={() => {
@@ -1075,12 +1056,8 @@ export default function HomePage() {
 
       {/* SETTINGS / CHANGE PASSWORD MODAL */}
       {isSettingsModalOpen && currentUser && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
-        }}>
-          <div style={{ background: 'white', borderRadius: '24px', width: '100%', maxWidth: '480px', padding: '2.5rem', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
+        <div className="modal-overlay">
+          <div className="modal-content">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                 <Settings size={24} color="#0284c7" />
@@ -1156,12 +1133,8 @@ export default function HomePage() {
 
       {/* LOGIN MODAL */}
       {isLoginModalOpen && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
-        }}>
-          <div style={{ background: 'white', borderRadius: '24px', width: '100%', maxWidth: '460px', padding: '2.5rem', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
+        <div className="modal-overlay">
+          <div className="modal-content">
             <div style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
               <div className="brand-icon" style={{ margin: '0 auto 1rem' }}>
                 <Lock size={22} />
@@ -1248,12 +1221,8 @@ export default function HomePage() {
 
       {/* BOOKING MODAL */}
       {isBookModalOpen && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
-        }}>
-          <div style={{ background: 'white', borderRadius: '18px', width: '100%', maxWidth: '480px', padding: '2rem' }}>
+        <div className="modal-overlay">
+          <div className="modal-content">
             <h3 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '1rem', color: '#0f172a' }}>Confirm Appointment</h3>
             <p style={{ fontSize: '0.95rem', color: '#64748b', marginBottom: '1.5rem' }}>
               Booking 30-minute slot on <strong>{selectedDate}</strong> at <strong>{selectedTimeSlot}</strong>
@@ -1280,12 +1249,8 @@ export default function HomePage() {
 
       {/* CANCEL APPOINTMENT MODAL */}
       {isCancelModalOpen && activeApptForAction && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
-        }}>
-          <div style={{ background: 'white', borderRadius: '18px', width: '100%', maxWidth: '480px', padding: '2rem' }}>
+        <div className="modal-overlay">
+          <div className="modal-content">
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#ef4444', marginBottom: '1rem' }}>
               <AlertCircle size={28} />
               <h3 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0f172a' }}>Cancel Appointment</h3>
@@ -1325,12 +1290,8 @@ export default function HomePage() {
 
       {/* RESCHEDULE APPOINTMENT MODAL */}
       {isRescheduleModalOpen && activeApptForAction && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
-        }}>
-          <div style={{ background: 'white', borderRadius: '18px', width: '100%', maxWidth: '520px', padding: '2rem' }}>
+        <div className="modal-overlay">
+          <div className="modal-content">
             <h3 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '0.5rem', color: '#0f172a' }}>Reschedule Appointment</h3>
             <p style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '1.5rem' }}>
               Currently: <strong>{activeApptForAction.date} at {activeApptForAction.time}</strong>
@@ -1379,12 +1340,8 @@ export default function HomePage() {
 
       {/* DOCTOR TIME-OFF MODAL */}
       {isTimeOffModalOpen && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
-        }}>
-          <div style={{ background: 'white', borderRadius: '18px', width: '100%', maxWidth: '500px', padding: '2rem' }}>
+        <div className="modal-overlay">
+          <div className="modal-content">
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#f59e0b', marginBottom: '1rem' }}>
               <AlertTriangle size={28} />
               <h3 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0f172a' }}>Log Emergency Time-Off</h3>
