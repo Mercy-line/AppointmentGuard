@@ -17,60 +17,12 @@ import {
   fetchPatientAppointmentsAPI 
 } from './lib/api';
 
-// Seed Users
+// Backend Accounts Mapping
 const SEEDED_USERS: Record<string, User> = {
   'john@patient.com': { id: 'P101', email: 'john@patient.com', username: 'patient_john', name: 'John Doe', role: 'PATIENT' },
   'dr.alice@clinic.com': { id: 'D201', email: 'dr.alice@clinic.com', username: 'dr_alice', name: 'Dr. Alice Cherop', role: 'DOCTOR', specialization: 'Cardiology' },
   'admin@appointmentguard.com': { id: 'A301', email: 'admin@appointmentguard.com', username: 'admin', name: 'System Admin', role: 'ADMIN' },
 };
-
-const INITIAL_DOCTORS: Doctor[] = [
-  { 
-    id: '1', 
-    name: 'Dr. Alice Cherop', 
-    email: 'dr.alice@clinic.com', 
-    specialization: 'Cardiology', 
-    hours: 'Mon–Fri, 8:00 AM – 4:00 PM', 
-    avatarInitials: 'AC', 
-    slotDurationMinutes: 30 
-  },
-  { 
-    id: '2', 
-    name: 'Dr. Peter Kamau', 
-    email: 'dr.peter@clinic.com', 
-    specialization: 'Pediatrician', 
-    hours: 'Mon–Sat, 9:00 AM – 3:00 PM', 
-    avatarInitials: 'PK', 
-    slotDurationMinutes: 30 
-  },
-  { 
-    id: '3', 
-    name: 'Dr. Grace Otieno', 
-    email: 'dr.grace@clinic.com', 
-    specialization: 'Obstetrics & Gynecology', 
-    hours: 'Tue–Sat, 10:00 AM – 5:00 PM', 
-    avatarInitials: 'GO', 
-    slotDurationMinutes: 30 
-  },
-  { 
-    id: '4', 
-    name: 'Dr. Samuel Mwangi', 
-    email: 'dr.samuel@clinic.com', 
-    specialization: 'Internal Medicine', 
-    hours: 'Mon–Fri, 11:00 AM – 6:00 PM', 
-    avatarInitials: 'SM', 
-    slotDurationMinutes: 30 
-  },
-  { 
-    id: '5', 
-    name: 'Dr. Lydia Wanjiru', 
-    email: 'dr.lydia@clinic.com', 
-    specialization: 'Family Medicine', 
-    hours: 'Wed–Sun, 8:30 AM – 2:30 PM', 
-    avatarInitials: 'LW', 
-    slotDurationMinutes: 30 
-  },
-];
 
 const DEFAULT_TIME_SLOTS: TimeSlot[] = [
   { time: '09:00 AM', available: true },
@@ -84,8 +36,9 @@ const DEFAULT_TIME_SLOTS: TimeSlot[] = [
 ];
 
 export default function HomePage() {
-  // Doctors State (synced with Django API or initial)
-  const [doctorsList, setDoctorsList] = useState<Doctor[]>(INITIAL_DOCTORS);
+  // Real Backend Doctors State (Strictly synced from Django API)
+  const [doctorsList, setDoctorsList] = useState<Doctor[]>([]);
+  const [isLoadingDoctors, setIsLoadingDoctors] = useState<boolean>(true);
 
   // Mobile Hamburger Menu State
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
@@ -106,7 +59,7 @@ export default function HomePage() {
   const [adminFilterTab, setAdminFilterTab] = useState<'ADMIN_OVERVIEW' | 'ADMIN_DOCTORS' | 'ADMIN_APPOINTMENTS'>('ADMIN_OVERVIEW');
 
   // Admin Selected Doctor Tab State
-  const [selectedAdminDoctorId, setSelectedAdminDoctorId] = useState<string>('1');
+  const [selectedAdminDoctorId, setSelectedAdminDoctorId] = useState<string>('');
 
   // Auth State
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -124,60 +77,14 @@ export default function HomePage() {
   const [passwordChangeError, setPasswordChangeError] = useState<string | null>(null);
 
   // Booking & Appointments State
-  const [selectedDoctorId, setSelectedDoctorId] = useState<string>('1');
+  const [selectedDoctorId, setSelectedDoctorId] = useState<string>('');
   const [selectedDate, setSelectedDate] = useState<string>('2026-08-05');
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
   const [isBookModalOpen, setIsBookModalOpen] = useState<boolean>(false);
   const [patientBookingName, setPatientBookingName] = useState<string>('John Doe');
 
-  // Appointments DB State
-  const [appointments, setAppointments] = useState<Appointment[]>([
-    {
-      id: 'APT-1001',
-      doctorId: '1',
-      doctorName: 'Dr. Alice Cherop',
-      specialization: 'Cardiology',
-      patientId: 'P101',
-      patientName: 'John Doe',
-      date: '2026-08-05',
-      time: '10:00 AM',
-      status: 'CONFIRMED'
-    },
-    {
-      id: 'APT-1002',
-      doctorId: '2',
-      doctorName: 'Dr. Peter Kamau',
-      specialization: 'Pediatrician',
-      patientId: 'P101',
-      patientName: 'John Doe',
-      date: '2026-08-06',
-      time: '11:30 AM',
-      status: 'CONFIRMED'
-    },
-    {
-      id: 'APT-1003',
-      doctorId: '1',
-      doctorName: 'Dr. Alice Cherop',
-      specialization: 'Cardiology',
-      patientId: 'P101',
-      patientName: 'John Doe',
-      date: '2026-08-01',
-      time: '02:30 PM',
-      status: 'CANCELLED',
-      cancellationReason: 'Personal emergency schedule change'
-    },
-    {
-      id: 'APT-1004',
-      doctorId: '3',
-      doctorName: 'Dr. Grace Otieno',
-      specialization: 'Obstetrics & Gynecology',
-      patientId: 'P105',
-      patientName: 'Mary Wanjiku',
-      date: '2026-08-07',
-      time: '09:00 AM',
-      status: 'CONFIRMED'
-    }
-  ]);
+  // Appointments DB State (Strictly synced from Django API)
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
 
   // Action Modals State (Cancel & Reschedule)
   const [activeApptForAction, setActiveApptForAction] = useState<Appointment | null>(null);
@@ -195,23 +102,29 @@ export default function HomePage() {
   const [timeOffEnd, setTimeOffEnd] = useState<string>('2026-08-05T17:00');
   const [timeOffReason, setTimeOffReason] = useState<string>('Personal Leave');
 
-  // Fetch doctors from Django REST API on mount
+  // Fetch real doctors from Django REST API on mount
   useEffect(() => {
     async function loadDoctorsFromBackend() {
+      setIsLoadingDoctors(true);
       const data = await fetchDoctorsFromAPI();
-      if (data && Array.isArray(data) && data.length > 0) {
+      if (data && Array.isArray(data)) {
         setDoctorsList(data);
+        if (data.length > 0) {
+          setSelectedDoctorId(data[0].id);
+          setSelectedAdminDoctorId(data[0].id);
+        }
       }
+      setIsLoadingDoctors(false);
     }
     loadDoctorsFromBackend();
   }, []);
 
-  // Fetch appointments for patient when logged in
+  // Fetch appointments for logged-in user from Django API
   useEffect(() => {
     async function loadPatientAppts() {
       if (currentUser && currentUser.role === 'PATIENT') {
         const apiAppts = await fetchPatientAppointmentsAPI(currentUser.id);
-        if (apiAppts && Array.isArray(apiAppts) && apiAppts.length > 0) {
+        if (apiAppts && Array.isArray(apiAppts)) {
           setAppointments(apiAppts);
         }
       }
@@ -294,11 +207,11 @@ export default function HomePage() {
 
     const doc = doctorsList.find(d => d.id === selectedDoctorId);
     
-    // Call Django REST API endpoint
-    await bookAppointmentAPI(doc ? doc.id : '1', `${selectedDate}T10:00:00Z`, currentUser?.id);
+    // Send real POST request to Django REST API
+    const apiRes = await bookAppointmentAPI(doc ? doc.id : selectedDoctorId, `${selectedDate}T10:00:00Z`, currentUser?.id);
 
     const newAppt: Appointment = {
-      id: `APT-${Math.floor(1000 + Math.random() * 9000)}`,
+      id: apiRes?.id || `APT-${Math.floor(1000 + Math.random() * 9000)}`,
       doctorId: doc ? doc.id : '1',
       doctorName: doc ? doc.name : 'Dr. Alice Cherop',
       specialization: doc ? doc.specialization : 'Cardiology',
@@ -325,7 +238,7 @@ export default function HomePage() {
   const handleConfirmCancel = async () => {
     if (!activeApptForAction || !cancellationReasonInput.trim()) return;
 
-    // Call Django REST API endpoint
+    // Send real PATCH request to Django REST API
     await cancelAppointmentAPI(activeApptForAction.id, cancellationReasonInput.trim());
 
     setAppointments(appointments.map(a => {
@@ -349,7 +262,7 @@ export default function HomePage() {
   const handleConfirmReschedule = async () => {
     if (!activeApptForAction || !rescheduleTimeSlot) return;
 
-    // Call Django REST API endpoint
+    // Send real PATCH request to Django REST API
     await rescheduleAppointmentAPI(activeApptForAction.id, `${rescheduleDate}T11:00:00Z`);
 
     setAppointments(appointments.map(a => {
@@ -370,10 +283,10 @@ export default function HomePage() {
     setRescheduleTimeSlot(null);
   };
 
-  // Doctor Emergency Time-Off Handler
+  // Doctor Time-Off Handler
   const handleConfirmTimeOff = (e: React.FormEvent) => {
     e.preventDefault();
-    const docId = currentUser?.role === 'DOCTOR' ? '1' : selectedDoctorId;
+    const docId = currentUser?.role === 'DOCTOR' ? (doctorsList[0]?.id || '1') : selectedDoctorId;
 
     const newTimeOff: DoctorTimeOff = {
       id: `TO-${Math.floor(100 + Math.random() * 900)}`,
@@ -386,7 +299,7 @@ export default function HomePage() {
 
     setTimeOffList([newTimeOff, ...timeOffList]);
 
-    // Cancel all existing appointments for this doctor & notify patients
+    // Cancel all existing appointments for this doctor
     setAppointments(appointments.map(a => {
       if (a.doctorId === docId && a.status === 'CONFIRMED') {
         return {
@@ -431,7 +344,7 @@ export default function HomePage() {
   });
 
   const selectedAdminDoctor = doctorsList.find(d => d.id === selectedAdminDoctorId) || doctorsList[0];
-  const selectedDoctorAppointments = appointments.filter(a => a.doctorId === selectedAdminDoctor.id || a.doctorName.includes(selectedAdminDoctor.name));
+  const selectedDoctorAppointments = selectedAdminDoctor ? appointments.filter(a => a.doctorId === selectedAdminDoctor.id || a.doctorName.includes(selectedAdminDoctor.name)) : [];
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -792,7 +705,7 @@ export default function HomePage() {
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                   {doctorsList.map(doc => {
                     const docApptCount = appointments.filter(a => a.doctorId === doc.id || a.doctorName.includes(doc.name)).length;
-                    const isSelected = doc.id === selectedAdminDoctor.id;
+                    const isSelected = selectedAdminDoctor && doc.id === selectedAdminDoctor.id;
                     return (
                       <button
                         type="button"
@@ -851,119 +764,121 @@ export default function HomePage() {
               </div>
 
               {/* SELECTED DOCTOR APPOINTMENTS CARD */}
-              <div style={{ background: 'white', borderRadius: '16px', padding: '1.25rem', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-                
-                {/* Selected Doctor Profile Header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.85rem', marginBottom: '1.5rem', paddingBottom: '0.85rem', borderBottom: '1px solid #e2e8f0' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-                    {/* CIRCULAR INITIALS BADGE */}
-                    <div style={{
-                      width: '42px',
-                      height: '42px',
-                      borderRadius: '50%',
-                      border: '2px solid #0284c7',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      background: '#cff4fc',
-                      color: '#087990',
-                      fontSize: '1rem',
-                      fontWeight: 800,
-                      flexShrink: 0
-                    }}>
-                      {selectedAdminDoctor.avatarInitials}
-                    </div>
-
-                    <div>
-                      <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a' }}>{selectedAdminDoctor.name}</h2>
-                      <p style={{ fontSize: '0.8rem', color: '#0284c7', fontWeight: 600, marginTop: '0.15rem' }}>
-                        {selectedAdminDoctor.specialization} • {selectedAdminDoctor.hours}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div style={{ textAlign: 'left' }}>
-                    <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Assigned Appointments</span>
-                    <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0f172a' }}>{selectedDoctorAppointments.length}</h3>
-                  </div>
-                </div>
-
-                {/* Appointments List for Selected Doctor */}
-                {selectedDoctorAppointments.length === 0 ? (
-                  <div style={{ padding: '2rem 1rem', color: '#64748b', textAlign: 'center' }}>
-                    <Calendar size={38} color="#cbd5e1" style={{ marginBottom: '0.75rem' }} />
-                    <p style={{ fontWeight: 600, fontSize: '0.82rem' }}>No appointments booked for {selectedAdminDoctor.name} yet.</p>
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-                    {selectedDoctorAppointments.map(appt => (
-                      <div 
-                        key={appt.id} 
-                        style={{ 
-                          padding: '1rem', 
-                          border: '1px solid #e2e8f0', 
-                          borderRadius: '12px', 
-                          background: '#ffffff'
-                        }}
-                      >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.4rem' }}>
-                          <div>
-                            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#0284c7', textTransform: 'uppercase' }}>Ref: {appt.id}</span>
-                            <h3 style={{ fontSize: '0.98rem', fontWeight: 700, color: '#0f172a', margin: '0.15rem 0' }}>
-                              Patient: {appt.patientName}
-                            </h3>
-                            <p style={{ fontSize: '0.78rem', color: '#64748b' }}>
-                              Doctor: {appt.doctorName} ({appt.specialization})
-                            </p>
-                          </div>
-
-                          <span className={`role-badge badge-${appt.status.toLowerCase()}`}>
-                            {appt.status === 'CONFIRMED' ? 'Confirmed' : 'Cancelled'}
-                          </span>
-                        </div>
-
-                        <div style={{ display: 'flex', gap: '0.85rem', marginTop: '0.65rem', color: '#334155', fontSize: '0.8rem', fontWeight: 600, flexWrap: 'wrap' }}>
-                          <span>📅 {appt.date}</span>
-                          <span>🕒 {appt.time} (30 mins)</span>
-                        </div>
-
-                        {appt.cancellationReason && (
-                          <div style={{ marginTop: '0.65rem', padding: '0.55rem 0.75rem', background: '#fef2f2', borderRadius: '8px', border: '1px solid #fecaca', color: '#991b1b', fontSize: '0.78rem' }}>
-                            <strong>Reason / Alert:</strong> {appt.cancellationReason}
-                          </div>
-                        )}
-
-                        {appt.status !== 'CANCELLED' && (
-                          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.85rem', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                            <button 
-                              type="button"
-                              className="btn-sm-outline"
-                              onClick={() => {
-                                setActiveApptForAction(appt);
-                                setIsRescheduleModalOpen(true);
-                              }}
-                            >
-                              Reschedule
-                            </button>
-                            
-                            <button 
-                              type="button"
-                              className="btn-danger"
-                              style={{ padding: '0.35rem 0.75rem', fontSize: '0.78rem' }}
-                              onClick={() => {
-                                setActiveApptForAction(appt);
-                                setIsCancelModalOpen(true);
-                              }}
-                            >
-                              Cancel Appointment
-                            </button>
-                          </div>
-                        )}
+              {selectedAdminDoctor && (
+                <div style={{ background: 'white', borderRadius: '16px', padding: '1.25rem', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                  
+                  {/* Selected Doctor Profile Header */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.85rem', marginBottom: '1.5rem', paddingBottom: '0.85rem', borderBottom: '1px solid #e2e8f0' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                      {/* CIRCULAR INITIALS BADGE */}
+                      <div style={{
+                        width: '42px',
+                        height: '42px',
+                        borderRadius: '50%',
+                        border: '2px solid #0284c7',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: '#cff4fc',
+                        color: '#087990',
+                        fontSize: '1rem',
+                        fontWeight: 800,
+                        flexShrink: 0
+                      }}>
+                        {selectedAdminDoctor.avatarInitials}
                       </div>
-                    ))}
+
+                      <div>
+                        <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a' }}>{selectedAdminDoctor.name}</h2>
+                        <p style={{ fontSize: '0.8rem', color: '#0284c7', fontWeight: 600, marginTop: '0.15rem' }}>
+                          {selectedAdminDoctor.specialization} • {selectedAdminDoctor.hours}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div style={{ textAlign: 'left' }}>
+                      <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Assigned Appointments</span>
+                      <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0f172a' }}>{selectedDoctorAppointments.length}</h3>
+                    </div>
                   </div>
-                )}
-              </div>
+
+                  {/* Appointments List for Selected Doctor */}
+                  {selectedDoctorAppointments.length === 0 ? (
+                    <div style={{ padding: '2rem 1rem', color: '#64748b', textAlign: 'center' }}>
+                      <Calendar size={38} color="#cbd5e1" style={{ marginBottom: '0.75rem' }} />
+                      <p style={{ fontWeight: 600, fontSize: '0.82rem' }}>No appointments booked for {selectedAdminDoctor.name} yet.</p>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                      {selectedDoctorAppointments.map(appt => (
+                        <div 
+                          key={appt.id} 
+                          style={{ 
+                            padding: '1rem', 
+                            border: '1px solid #e2e8f0', 
+                            borderRadius: '12px', 
+                            background: '#ffffff'
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.4rem' }}>
+                            <div>
+                              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#0284c7', textTransform: 'uppercase' }}>Ref: {appt.id}</span>
+                              <h3 style={{ fontSize: '0.98rem', fontWeight: 700, color: '#0f172a', margin: '0.15rem 0' }}>
+                                Patient: {appt.patientName}
+                              </h3>
+                              <p style={{ fontSize: '0.78rem', color: '#64748b' }}>
+                                Doctor: {appt.doctorName} ({appt.specialization})
+                              </p>
+                            </div>
+
+                            <span className={`role-badge badge-${appt.status.toLowerCase()}`}>
+                              {appt.status === 'CONFIRMED' ? 'Confirmed' : 'Cancelled'}
+                            </span>
+                          </div>
+
+                          <div style={{ display: 'flex', gap: '0.85rem', marginTop: '0.65rem', color: '#334155', fontSize: '0.8rem', fontWeight: 600, flexWrap: 'wrap' }}>
+                            <span>📅 {appt.date}</span>
+                            <span>🕒 {appt.time} (30 mins)</span>
+                          </div>
+
+                          {appt.cancellationReason && (
+                            <div style={{ marginTop: '0.65rem', padding: '0.55rem 0.75rem', background: '#fef2f2', borderRadius: '8px', border: '1px solid #fecaca', color: '#991b1b', fontSize: '0.78rem' }}>
+                              <strong>Reason / Alert:</strong> {appt.cancellationReason}
+                            </div>
+                          )}
+
+                          {appt.status !== 'CANCELLED' && (
+                            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.85rem', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                              <button 
+                                type="button"
+                                className="btn-sm-outline"
+                                onClick={() => {
+                                  setActiveApptForAction(appt);
+                                  setIsRescheduleModalOpen(true);
+                                }}
+                              >
+                                Reschedule
+                              </button>
+                              
+                              <button 
+                                type="button"
+                                className="btn-danger"
+                                style={{ padding: '0.35rem 0.75rem', fontSize: '0.78rem' }}
+                                onClick={() => {
+                                  setActiveApptForAction(appt);
+                                  setIsCancelModalOpen(true);
+                                }}
+                              >
+                                Cancel Appointment
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
             </div>
           )}
@@ -1284,76 +1199,86 @@ export default function HomePage() {
             </div>
           </section>
 
-          {/* 5. OUR DOCTORS SECTION — DOWNWARD EXPANDABLE ACCORDION LIST WITH CIRCULAR INITIALS */}
+          {/* 5. OUR DOCTORS SECTION — LIVE FETCHED FROM BACKEND API */}
           <section className="section section-tint" id="doctors-section">
             <div className="section-header">
               <h2 className="section-title">Our Doctors</h2>
               <p className="section-subtitle">Click on any doctor's name below to expand their timeline and available hours.</p>
             </div>
 
-            <div className="doctors-accordion-list">
-              {doctorsList.map(doc => {
-                const isExpanded = !!expandedDoctorIds[doc.id];
-                return (
-                  <div key={doc.id} className="doctor-accordion-item">
-                    {/* ACCORDION HEADER: CIRCULAR INITIALS + NAME + DROPDOWN CHEVRON */}
-                    <div 
-                      className="doctor-accordion-header"
-                      onClick={() => toggleDoctorAccordion(doc.id)}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        {/* CIRCULAR INITIALS CONTAINER */}
-                        <div style={{
-                          width: '36px',
-                          height: '36px',
-                          borderRadius: '50%',
-                          border: '2px solid #0284c7',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          background: '#cff4fc',
-                          color: '#087990',
-                          fontSize: '0.85rem',
-                          fontWeight: 800,
-                          flexShrink: 0
-                        }}>
-                          {doc.avatarInitials}
+            {isLoadingDoctors ? (
+              <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b', fontSize: '0.9rem', fontWeight: 600 }}>
+                Loading doctors list from backend...
+              </div>
+            ) : doctorsList.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b', fontSize: '0.9rem', fontWeight: 600 }}>
+                No active doctors registered in clinic database.
+              </div>
+            ) : (
+              <div className="doctors-accordion-list">
+                {doctorsList.map(doc => {
+                  const isExpanded = !!expandedDoctorIds[doc.id];
+                  return (
+                    <div key={doc.id} className="doctor-accordion-item">
+                      {/* ACCORDION HEADER: CIRCULAR INITIALS + NAME + DROPDOWN CHEVRON */}
+                      <div 
+                        className="doctor-accordion-header"
+                        onClick={() => toggleDoctorAccordion(doc.id)}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          {/* CIRCULAR INITIALS CONTAINER */}
+                          <div style={{
+                            width: '36px',
+                            height: '36px',
+                            borderRadius: '50%',
+                            border: '2px solid #0284c7',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: '#cff4fc',
+                            color: '#087990',
+                            fontSize: '0.85rem',
+                            fontWeight: 800,
+                            flexShrink: 0
+                          }}>
+                            {doc.avatarInitials}
+                          </div>
+
+                          <div>
+                            <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>{doc.name}</span>
+                            <span style={{ fontSize: '0.8rem', color: '#0284c7', fontWeight: 500, marginLeft: '0.4rem' }}>({doc.specialization})</span>
+                          </div>
                         </div>
 
-                        <div>
-                          <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>{doc.name}</span>
-                          <span style={{ fontSize: '0.8rem', color: '#0284c7', fontWeight: 500, marginLeft: '0.4rem' }}>({doc.specialization})</span>
-                        </div>
-                      </div>
-
-                      <button type="button" style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                        {isExpanded ? <ChevronUp size={18} color="#0284c7" /> : <ChevronDown size={18} />}
-                      </button>
-                    </div>
-
-                    {/* EXPANDABLE DROPDOWN CONTENT: TIMELINE & DETAILS */}
-                    {isExpanded && (
-                      <div className="doctor-accordion-content">
-                        <p style={{ fontSize: '0.82rem', color: '#475569', marginBottom: '0.35rem' }}>
-                          <strong>Specialization:</strong> {doc.specialization}
-                        </p>
-                        <p style={{ fontSize: '0.82rem', color: '#475569', marginBottom: '0.75rem' }}>
-                          <strong>Timeline & Available Hours:</strong> {doc.hours} (30-minute consultation slots)
-                        </p>
-                        <button 
-                          type="button"
-                          className="btn-primary"
-                          style={{ fontSize: '0.78rem', padding: '0.4rem 1rem', borderRadius: '20px' }}
-                          onClick={() => setIsLoginModalOpen(true)}
-                        >
-                          Book Appointment with {doc.name}
+                        <button type="button" style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                          {isExpanded ? <ChevronUp size={18} color="#0284c7" /> : <ChevronDown size={18} />}
                         </button>
                       </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+
+                      {/* EXPANDABLE DROPDOWN CONTENT: TIMELINE & DETAILS */}
+                      {isExpanded && (
+                        <div className="doctor-accordion-content">
+                          <p style={{ fontSize: '0.82rem', color: '#475569', marginBottom: '0.35rem' }}>
+                            <strong>Specialization:</strong> {doc.specialization}
+                          </p>
+                          <p style={{ fontSize: '0.82rem', color: '#475569', marginBottom: '0.75rem' }}>
+                            <strong>Timeline & Available Hours:</strong> {doc.hours} (30-minute consultation slots)
+                          </p>
+                          <button 
+                            type="button"
+                            className="btn-primary"
+                            style={{ fontSize: '0.78rem', padding: '0.4rem 1rem', borderRadius: '20px' }}
+                            onClick={() => setIsLoginModalOpen(true)}
+                          >
+                            Book Appointment with {doc.name}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </section>
         </>
       )}
