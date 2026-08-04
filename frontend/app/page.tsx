@@ -17,11 +17,51 @@ const SEEDED_USERS: Record<string, User> = {
 };
 
 const INITIAL_DOCTORS: Doctor[] = [
-  { id: '1', name: 'Dr. Alice Cherop', email: 'dr.alice@clinic.com', specialization: 'Cardiology', hours: 'Mon–Fri, 8:00 AM – 4:00 PM', avatarInitials: 'AC', slotDurationMinutes: 30 },
-  { id: '2', name: 'Dr. Peter Kamau', email: 'dr.peter@clinic.com', specialization: 'Pediatrician', hours: 'Mon–Sat, 9:00 AM – 3:00 PM', avatarInitials: 'PK', slotDurationMinutes: 30 },
-  { id: '3', name: 'Dr. Grace Otieno', email: 'dr.grace@clinic.com', specialization: 'Obstetrics & Gynecology', hours: 'Tue–Sat, 10:00 AM – 5:00 PM', avatarInitials: 'GO', slotDurationMinutes: 30 },
-  { id: '4', name: 'Dr. Samuel Mwangi', email: 'dr.samuel@clinic.com', specialization: 'Internal Medicine', hours: 'Mon–Fri, 11:00 AM – 6:00 PM', avatarInitials: 'SM', slotDurationMinutes: 30 },
-  { id: '5', name: 'Dr. Lydia Wanjiru', email: 'dr.lydia@clinic.com', specialization: 'Family Medicine', hours: 'Wed–Sun, 8:30 AM – 2:30 PM', avatarInitials: 'LW', slotDurationMinutes: 30 },
+  { 
+    id: '1', 
+    name: 'Dr. Alice Cherop', 
+    email: 'dr.alice@clinic.com', 
+    specialization: 'Cardiology', 
+    hours: 'Mon–Fri, 8:00 AM – 4:00 PM', 
+    avatarInitials: 'AC', 
+    slotDurationMinutes: 30 
+  },
+  { 
+    id: '2', 
+    name: 'Dr. Peter Kamau', 
+    email: 'dr.peter@clinic.com', 
+    specialization: 'Pediatrician', 
+    hours: 'Mon–Sat, 9:00 AM – 3:00 PM', 
+    avatarInitials: 'PK', 
+    slotDurationMinutes: 30 
+  },
+  { 
+    id: '3', 
+    name: 'Dr. Grace Otieno', 
+    email: 'dr.grace@clinic.com', 
+    specialization: 'Obstetrics & Gynecology', 
+    hours: 'Tue–Sat, 10:00 AM – 5:00 PM', 
+    avatarInitials: 'GO', 
+    slotDurationMinutes: 30 
+  },
+  { 
+    id: '4', 
+    name: 'Dr. Samuel Mwangi', 
+    email: 'dr.samuel@clinic.com', 
+    specialization: 'Internal Medicine', 
+    hours: 'Mon–Fri, 11:00 AM – 6:00 PM', 
+    avatarInitials: 'SM', 
+    slotDurationMinutes: 30 
+  },
+  { 
+    id: '5', 
+    name: 'Dr. Lydia Wanjiru', 
+    email: 'dr.lydia@clinic.com', 
+    specialization: 'Family Medicine', 
+    hours: 'Wed–Sun, 8:30 AM – 2:30 PM', 
+    avatarInitials: 'LW', 
+    slotDurationMinutes: 30 
+  },
 ];
 
 const DEFAULT_TIME_SLOTS: TimeSlot[] = [
@@ -406,7 +446,7 @@ export default function HomePage() {
         </button>
       </nav>
 
-      {/* MOBILE MENU DRAWER OVERLAY (COMPACT TEXT) */}
+      {/* MOBILE MENU DRAWER OVERLAY */}
       {isMobileMenuOpen && (
         <div className="mobile-menu-drawer">
           {currentUser ? (
@@ -632,13 +672,13 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* ADMIN VIEW: INDIVIDUAL DOCTOR TABS WITH THEIR SPECIFIC APPOINTMENTS */}
+          {/* ADMIN VIEW: INDIVIDUAL DOCTOR TABS WITH CIRCULAR INITIALS & APPOINTMENTS */}
           {currentUser.role === 'ADMIN' && adminFilterTab === 'ADMIN_DOCTORS' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
               
-              {/* DOCTOR SELECTOR TABS */}
+              {/* DOCTOR SELECTOR TABS WITH INITIALS BADGES */}
               <div style={{ background: 'white', padding: '1.25rem', borderRadius: '18px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)' }}>
-                <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.85rem' }}>
+                <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.85rem' }}>
                   Select a Doctor to View Their Assigned Appointments:
                 </h3>
 
@@ -654,25 +694,44 @@ export default function HomePage() {
                           display: 'flex',
                           alignItems: 'center',
                           gap: '0.5rem',
-                          padding: '0.55rem 1.1rem',
+                          padding: '0.45rem 1rem',
                           borderRadius: '30px',
                           border: `2px solid ${isSelected ? '#0284c7' : '#e2e8f0'}`,
                           background: isSelected ? '#e0f2fe' : 'white',
                           color: isSelected ? '#0369a1' : '#334155',
-                          fontWeight: isSelected ? 800 : 600,
-                          fontSize: '0.85rem',
+                          fontWeight: isSelected ? 700 : 600,
+                          fontSize: '0.82rem',
                           cursor: 'pointer',
                           transition: 'all 0.2s ease',
                           flexWrap: 'nowrap'
                         }}
                       >
-                        <span>🩺 {doc.name}</span>
+                        {/* CIRCULAR DOCTOR INITIALS BADGE */}
+                        <div style={{
+                          width: '28px',
+                          height: '28px',
+                          borderRadius: '50%',
+                          border: '1.5px solid #0284c7',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          background: '#cff4fc',
+                          color: '#087990',
+                          fontSize: '0.72rem',
+                          fontWeight: 800,
+                          flexShrink: 0
+                        }}>
+                          {doc.avatarInitials}
+                        </div>
+
+                        <span>{doc.name}</span>
+
                         <span style={{ 
                           background: isSelected ? '#0284c7' : '#cbd5e1', 
                           color: 'white', 
-                          padding: '0.15rem 0.5rem', 
+                          padding: '0.1rem 0.45rem', 
                           borderRadius: '20px', 
-                          fontSize: '0.75rem',
+                          fontSize: '0.72rem',
                           fontWeight: 800 
                         }}>
                           {docApptCount}
@@ -689,20 +748,35 @@ export default function HomePage() {
                 {/* Selected Doctor Profile Header */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.75rem', paddingBottom: '1rem', borderBottom: '1px solid #e2e8f0' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap' }}>
-                    <div className="doctor-avatar" style={{ margin: 0, width: '48px', height: '48px', fontSize: '1.15rem' }}>
+                    {/* CIRCULAR INITIALS BADGE */}
+                    <div style={{
+                      width: '48px',
+                      height: '48px',
+                      borderRadius: '50%',
+                      border: '2px solid #0284c7',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: '#cff4fc',
+                      color: '#087990',
+                      fontSize: '1.1rem',
+                      fontWeight: 800,
+                      flexShrink: 0
+                    }}>
                       {selectedAdminDoctor.avatarInitials}
                     </div>
+
                     <div>
                       <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f172a' }}>{selectedAdminDoctor.name}</h2>
-                      <p style={{ fontSize: '0.85rem', color: '#0284c7', fontWeight: 600, marginTop: '0.2rem' }}>
+                      <p style={{ fontSize: '0.85rem', color: '#0284c7', fontWeight: 600, marginTop: '0.15rem' }}>
                         {selectedAdminDoctor.specialization} • {selectedAdminDoctor.hours}
                       </p>
                     </div>
                   </div>
 
                   <div style={{ textAlign: 'left' }}>
-                    <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Assigned Appointments</span>
-                    <h3 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0f172a' }}>{selectedDoctorAppointments.length}</h3>
+                    <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Assigned Appointments</span>
+                    <h3 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a' }}>{selectedDoctorAppointments.length}</h3>
                   </div>
                 </div>
 
@@ -710,7 +784,7 @@ export default function HomePage() {
                 {selectedDoctorAppointments.length === 0 ? (
                   <div style={{ padding: '2.5rem 1rem', color: '#64748b', textAlign: 'center' }}>
                     <Calendar size={44} color="#cbd5e1" style={{ marginBottom: '0.85rem' }} />
-                    <p style={{ fontWeight: 600, fontSize: '0.9rem' }}>No appointments booked for {selectedAdminDoctor.name} yet.</p>
+                    <p style={{ fontWeight: 600, fontSize: '0.88rem' }}>No appointments booked for {selectedAdminDoctor.name} yet.</p>
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -869,7 +943,7 @@ export default function HomePage() {
                   {visibleAppointments.length === 0 ? (
                     <div style={{ padding: '2.5rem 1rem', color: '#64748b', textAlign: 'center' }}>
                       <Calendar size={44} color="#cbd5e1" style={{ marginBottom: '0.85rem' }} />
-                      <p style={{ fontWeight: 600, fontSize: '0.9rem' }}>No appointments in this category.</p>
+                      <p style={{ fontWeight: 600, fontSize: '0.88rem' }}>No appointments in this category.</p>
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -1096,7 +1170,7 @@ export default function HomePage() {
             </div>
           </section>
 
-          {/* 5. OUR DOCTORS SECTION — DOWNWARD EXPANDABLE ACCORDION LIST */}
+          {/* 5. OUR DOCTORS SECTION — DOWNWARD EXPANDABLE ACCORDION LIST WITH CIRCULAR INITIALS */}
           <section className="section section-tint" id="doctors-section">
             <div className="section-header">
               <h2 className="section-title">Our Doctors</h2>
@@ -1108,38 +1182,53 @@ export default function HomePage() {
                 const isExpanded = !!expandedDoctorIds[doc.id];
                 return (
                   <div key={doc.id} className="doctor-accordion-item">
-                    {/* ACCORDION HEADER: NAME ONLY + DROPDOWN CHEVRON */}
+                    {/* ACCORDION HEADER: CIRCULAR INITIALS + NAME + DROPDOWN CHEVRON */}
                     <div 
                       className="doctor-accordion-header"
                       onClick={() => toggleDoctorAccordion(doc.id)}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-                        <div className="doctor-avatar" style={{ margin: 0, width: '40px', height: '40px', fontSize: '1rem' }}>
+                        {/* CIRCULAR INITIALS CONTAINER */}
+                        <div style={{
+                          width: '38px',
+                          height: '38px',
+                          borderRadius: '50%',
+                          border: '2px solid #0284c7',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          background: '#cff4fc',
+                          color: '#087990',
+                          fontSize: '0.9rem',
+                          fontWeight: 800,
+                          flexShrink: 0
+                        }}>
                           {doc.avatarInitials}
                         </div>
+
                         <div>
-                          <span style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0f172a' }}>{doc.name}</span>
-                          <span style={{ fontSize: '0.82rem', color: '#0284c7', fontWeight: 600, marginLeft: '0.6rem' }}>({doc.specialization})</span>
+                          <span style={{ fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>{doc.name}</span>
+                          <span style={{ fontSize: '0.82rem', color: '#0284c7', fontWeight: 500, marginLeft: '0.5rem' }}>({doc.specialization})</span>
                         </div>
                       </div>
 
                       <button style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                        {isExpanded ? <ChevronUp size={22} color="#0284c7" /> : <ChevronDown size={22} />}
+                        {isExpanded ? <ChevronUp size={20} color="#0284c7" /> : <ChevronDown size={20} />}
                       </button>
                     </div>
 
                     {/* EXPANDABLE DROPDOWN CONTENT: TIMELINE & DETAILS */}
                     {isExpanded && (
                       <div className="doctor-accordion-content">
-                        <p style={{ fontSize: '0.88rem', color: '#475569', marginBottom: '0.4rem' }}>
+                        <p style={{ fontSize: '0.85rem', color: '#475569', marginBottom: '0.35rem' }}>
                           <strong>Specialization:</strong> {doc.specialization}
                         </p>
-                        <p style={{ fontSize: '0.88rem', color: '#475569', marginBottom: '1rem' }}>
+                        <p style={{ fontSize: '0.85rem', color: '#475569', marginBottom: '0.85rem' }}>
                           <strong>Timeline & Available Hours:</strong> {doc.hours} (30-minute consultation slots)
                         </p>
                         <button 
                           className="btn-primary"
-                          style={{ fontSize: '0.82rem', padding: '0.5rem 1.2rem', borderRadius: '20px' }}
+                          style={{ fontSize: '0.8rem', padding: '0.45rem 1.1rem', borderRadius: '20px' }}
                           onClick={() => setIsLoginModalOpen(true)}
                         >
                           Book Appointment with {doc.name}

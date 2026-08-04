@@ -16,6 +16,7 @@ export interface Doctor {
   specialization: string;
   hours: string;
   avatarInitials: string;
+  avatarUrl?: string;
   slotDurationMinutes: number;
 }
 
@@ -33,7 +34,7 @@ export interface Appointment {
   patientName: string;
   date: string;
   time: string;
-  status: 'CONFIRMED' | 'CANCELLED' | 'NEEDS_RESCHEDULE';
+  status: 'CONFIRMED' | 'CANCELLED';
   cancellationReason?: string;
   notificationSent?: boolean;
 }
