@@ -3,37 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}AppointmentGuard — Clinic Booking System{% endblock %}</title>
+    <title>{% block title %}AppointmentGuard — MediCare Clinic Booking System{% endblock %}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #4f46e5;
-            --primary-hover: #4338ca;
-            --primary-light: #eef2ff;
+            --primary: #0284c7;
+            --primary-hover: #0369a1;
+            --primary-light: #e0f2fe;
+            --primary-soft: #f0f9ff;
             --secondary: #06b6d4;
             --success: #10b981;
             --warning: #f59e0b;
             --danger: #ef4444;
             --dark: #0f172a;
             --card-bg: #ffffff;
-            --body-bg: #f8fafc;
+            --body-bg: #ffffff;
+            --section-bg: #edf5fd;
             --text-main: #1e293b;
             --text-muted: #64748b;
             --border-color: #e2e8f0;
+            --radius-xl: 24px;
             --radius-lg: 16px;
-            --radius-md: 10px;
+            --radius-md: 12px;
             --shadow-sm: 0 2px 4px rgba(0,0,0,0.02);
-            --shadow-md: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
-            --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+            --shadow-md: 0 10px 25px -5px rgba(2, 132, 199, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+            --shadow-lg: 0 20px 25px -5px rgba(15, 23, 42, 0.08), 0 10px 10px -5px rgba(15, 23, 42, 0.02);
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        html {
+            scroll-behavior: smooth;
         }
 
         body {
@@ -44,15 +51,14 @@
             flex-direction: column;
         }
 
-        /* Modern Glassmorphic Navbar */
+        /* Navbar */
         .navbar {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(12px);
+            background: #ffffff;
             border-bottom: 1px solid var(--border-color);
             position: sticky;
             top: 0;
             z-index: 100;
-            padding: 0.85rem 2rem;
+            padding: 0.85rem 3rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -63,49 +69,47 @@
             align-items: center;
             gap: 0.75rem;
             font-size: 1.35rem;
-            font-weight: 700;
-            color: var(--dark);
+            font-weight: 800;
+            color: #0f172a;
             text-decoration: none;
+            letter-spacing: -0.3px;
         }
 
         .brand-icon {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            background: #0284c7;
             color: white;
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.25rem;
-            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+            font-size: 1.35rem;
         }
 
         .nav-links {
             display: flex;
             align-items: center;
-            gap: 1.25rem;
+            gap: 1.75rem;
         }
 
         .nav-link {
             text-decoration: none;
-            color: var(--text-muted);
+            color: #475569;
             font-weight: 500;
-            padding: 0.5rem 1rem;
-            border-radius: var(--radius-md);
-            transition: all 0.2s ease;
+            font-size: 0.95rem;
+            transition: color 0.2s ease;
         }
 
         .nav-link:hover, .nav-link.active {
             color: var(--primary);
-            background-color: var(--primary-light);
         }
 
         .user-badge {
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            background: var(--body-bg);
+            background: var(--section-bg);
             padding: 0.4rem 0.85rem;
             border-radius: 30px;
             border: 1px solid var(--border-color);
@@ -115,20 +119,7 @@
 
         .main-container {
             flex: 1;
-            max-width: 1280px;
             width: 100%;
-            margin: 0 auto;
-            padding: 2rem 1.5rem;
-        }
-
-        .footer {
-            border-top: 1px solid var(--border-color);
-            padding: 1.5rem 2rem;
-            text-align: center;
-            color: var(--text-muted);
-            font-size: 0.875rem;
-            background: white;
-            margin-top: auto;
         }
 
         /* Buttons */
@@ -137,10 +128,10 @@
             align-items: center;
             justify-content: center;
             gap: 0.5rem;
-            padding: 0.65rem 1.25rem;
-            border-radius: var(--radius-md);
-            font-weight: 600;
-            font-size: 0.9rem;
+            padding: 0.75rem 1.6rem;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 0.95rem;
             cursor: pointer;
             border: none;
             transition: all 0.2s ease;
@@ -148,14 +139,24 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+            background: #0284c7;
             color: white;
-            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
         }
 
         .btn-primary:hover {
+            background: #0369a1;
             transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35);
+        }
+
+        .btn-outline {
+            background: white;
+            color: #1e293b;
+            border: 1.5px solid #e2e8f0;
+        }
+
+        .btn-outline:hover {
+            border-color: #cbd5e1;
+            background: #f8fafc;
         }
 
         .btn-secondary {
@@ -185,19 +186,6 @@
             box-shadow: var(--shadow-md);
         }
 
-        /* Alert Banners */
-        .alert-banner {
-            margin-bottom: 1.5rem;
-            padding: 1rem 1.25rem;
-            border-radius: var(--radius-md);
-            font-weight: 500;
-            font-size: 0.9rem;
-        }
-        .alert-warning { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
-        .alert-error   { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-        .alert-info    { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
-        .alert-success { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
-
         /* Badges */
         .badge {
             display: inline-block;
@@ -206,14 +194,11 @@
             font-size: 0.75rem;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
 
         .badge-booked { background: #dcfce7; color: #166534; }
         .badge-cancelled { background: #fee2e2; color: #991b1b; }
         .badge-needs_reschedule { background: #fef3c7; color: #92400e; }
-        .badge-patient { background: #e0f2fe; color: #075985; }
-        .badge-doctor { background: #f3e8ff; color: #6b21a8; }
 
         /* Modal Overlay */
         .modal-overlay {
@@ -239,7 +224,7 @@
             background: white;
             border-radius: var(--radius-lg);
             width: 100%;
-            max-width: 480px;
+            max-width: 500px;
             padding: 2rem;
             box-shadow: var(--shadow-lg);
             transform: translateY(20px);
@@ -249,6 +234,65 @@
         .modal-overlay.active .modal-card {
             transform: translateY(0);
         }
+
+        /* Footer */
+        .footer {
+            background: #ffffff;
+            border-top: 1px solid var(--border-color);
+            padding: 3rem 3rem 2rem;
+            margin-top: auto;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            text-decoration: none;
+            color: #64748b;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .footer-links a:hover {
+            color: #0284c7;
+        }
+
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 0 auto;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 1.5rem;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 0.85rem 1.25rem;
+                flex-direction: column;
+                gap: 1rem;
+            }
+            .nav-links {
+                gap: 1rem;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -256,20 +300,24 @@
 
     <nav class="navbar">
         <a href="{% url 'appointments:dashboard' %}" class="brand">
-            <div class="brand-icon">🛡️</div>
+            <div class="brand-icon">🩺</div>
             <span>AppointmentGuard</span>
         </a>
         <div class="nav-links">
-            <a href="{% url 'appointments:dashboard' %}" class="nav-link">Book Appointment</a>
-            <a href="{% url 'appointments:doctor-dashboard' %}" class="nav-link">Doctor Portal</a>
+            <a href="{% url 'appointments:dashboard' %}" class="nav-link">Home</a>
+            <a href="{% url 'appointments:dashboard' %}#doctors-section" class="nav-link">Doctors</a>
+            <a href="{% url 'appointments:dashboard' %}#search-section" class="nav-link">Book Appointment</a>
+            <a href="{% url 'appointments:dashboard' %}#my-appointments-section" class="nav-link">My Appointments</a>
+            <a href="{% url 'appointments:dashboard' %}#contact-section" class="nav-link">Contact</a>
+            <a href="{% url 'appointments:doctor-dashboard' %}" class="nav-link" style="color: #0284c7; font-weight: 600;">Doctor Portal</a>
             {% if user.is_authenticated %}
                 <div class="user-badge">
                     <span>👤 {{ user.username }}</span>
                     <span class="badge badge-{{ user.role|lower }}">{{ user.role }}</span>
                 </div>
-                <a href="{% url 'appointments:logout' %}" class="btn btn-secondary" style="padding: 0.4rem 0.85rem; font-size: 0.8rem;">Logout</a>
+                <a href="{% url 'appointments:logout' %}" class="btn btn-primary" style="padding: 0.5rem 1.25rem; font-size: 0.85rem;">Logout</a>
             {% else %}
-                <a href="{% url 'appointments:login' %}" class="btn btn-primary" style="padding: 0.4rem 1rem; font-size: 0.85rem;">Login</a>
+                <a href="{% url 'appointments:login' %}" class="btn btn-primary" style="padding: 0.5rem 1.25rem; font-size: 0.85rem;">Login</a>
             {% endif %}
         </div>
     </nav>
@@ -279,7 +327,24 @@
     </main>
 
     <footer class="footer">
-        <p> AppointmentGuard Clinic System — Concurrency Safe Scheduling Engine (UTC Universal Timezone standard)</p>
+        <div class="footer-content">
+            <a href="{% url 'appointments:dashboard' %}" class="brand">
+                <div class="brand-icon">🩺</div>
+                <span>AppointmentGuard Clinic</span>
+            </a>
+            <div class="footer-links">
+                <a href="{% url 'appointments:dashboard' %}">Home</a>
+                <a href="{% url 'appointments:dashboard' %}#doctors-section">Doctors</a>
+                <a href="{% url 'appointments:dashboard' %}#search-section">Book Appointment</a>
+                <a href="{% url 'appointments:dashboard' %}#my-appointments-section">My Appointments</a>
+                <a href="{% url 'appointments:dashboard' %}#contact-section">Contact</a>
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2026 AppointmentGuard Clinic. All rights reserved. Concurrency Safe Scheduling Engine (UTC Universal Standard).</p>
+        </div>
     </footer>
 
     {% block extra_js %}{% endblock %}
