@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Stethoscope, Calendar, Clock, User as UserIcon, CheckCircle2, Shield,
   Activity, Heart, Baby, Syringe, TestTube, RefreshCw, LogOut, Lock, 
@@ -8,6 +8,14 @@ import {
   Menu, X, ChevronDown, ChevronUp
 } from 'lucide-react';
 import type { User, Doctor, TimeSlot, Appointment, DoctorTimeOff } from './types';
+import { 
+  fetchDoctorsFromAPI, 
+  fetchDoctorSlotsFromAPI, 
+  bookAppointmentAPI, 
+  cancelAppointmentAPI, 
+  rescheduleAppointmentAPI, 
+  fetchPatientAppointmentsAPI 
+} from './lib/api';
 
 // Seed Users
 const SEEDED_USERS: Record<string, User> = {
@@ -76,6 +84,9 @@ const DEFAULT_TIME_SLOTS: TimeSlot[] = [
 ];
 
 export default function HomePage() {
+  // Doctors State (synced with Django API or initial)
+  const [doctorsList, setDoctorsList] = useState<Doctor[]>(INITIAL_DOCTORS);
+
   // Mobile Hamburger Menu State
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
 
@@ -184,6 +195,30 @@ export default function HomePage() {
   const [timeOffEnd, setTimeOffEnd] = useState<string>('2026-08-05T17:00');
   const [timeOffReason, setTimeOffReason] = useState<string>('Personal Leave');
 
+  // Fetch doctors from Django REST API on mount
+  useEffect(() => {
+    async function loadDoctorsFromBackend() {
+      const data = await fetchDoctorsFromAPI();
+      if (data && Array.isArray(data) && data.length > 0) {
+        setDoctorsList(data);
+      }
+    }
+    loadDoctorsFromBackend();
+  }, []);
+
+  // Fetch appointments for patient when logged in
+  useEffect(() => {
+    async function loadPatientAppts() {
+      if (currentUser && currentUser.role === 'PATIENT') {
+        const apiAppts = await fetchPatientAppointmentsAPI(currentUser.id);
+        if (apiAppts && Array.isArray(apiAppts) && apiAppts.length > 0) {
+          setAppointments(apiAppts);
+        }
+      }
+    }
+    loadPatientAppts();
+  }, [currentUser]);
+
   // Toggle Doctor Accordion Dropdown
   const toggleDoctorAccordion = (docId: string) => {
     setExpandedDoctorIds(prev => ({
@@ -252,12 +287,16 @@ export default function HomePage() {
     setConfirmPasswordInput('');
   };
 
-  // Booking Submit
-  const handleBookSubmit = (e: React.FormEvent) => {
+  // Booking Submit with Django REST API Call
+  const handleBookSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedTimeSlot) return;
 
-    const doc = INITIAL_DOCTORS.find(d => d.id === selectedDoctorId);
+    const doc = doctorsList.find(d => d.id === selectedDoctorId);
+    
+    // Call Django REST API endpoint
+    await bookAppointmentAPI(doc ? doc.id : '1', `${selectedDate}T10:00:00Z`, currentUser?.id);
+
     const newAppt: Appointment = {
       id: `APT-${Math.floor(1000 + Math.random() * 9000)}`,
       doctorId: doc ? doc.id : '1',
@@ -282,9 +321,12 @@ export default function HomePage() {
     }
   };
 
-  // Cancel Appointment Handler
-  const handleConfirmCancel = () => {
+  // Cancel Appointment Handler with Django REST API Call
+  const handleConfirmCancel = async () => {
     if (!activeApptForAction || !cancellationReasonInput.trim()) return;
+
+    // Call Django REST API endpoint
+    await cancelAppointmentAPI(activeApptForAction.id, cancellationReasonInput.trim());
 
     setAppointments(appointments.map(a => {
       if (a.id === activeApptForAction.id) {
@@ -303,9 +345,12 @@ export default function HomePage() {
     setCancellationReasonInput('');
   };
 
-  // Reschedule Appointment Handler
-  const handleConfirmReschedule = () => {
+  // Reschedule Appointment Handler with Django REST API Call
+  const handleConfirmReschedule = async () => {
     if (!activeApptForAction || !rescheduleTimeSlot) return;
+
+    // Call Django REST API endpoint
+    await rescheduleAppointmentAPI(activeApptForAction.id, `${rescheduleDate}T11:00:00Z`);
 
     setAppointments(appointments.map(a => {
       if (a.id === activeApptForAction.id) {
@@ -325,7 +370,7 @@ export default function HomePage() {
     setRescheduleTimeSlot(null);
   };
 
-  // Doctor Time-Off Handler
+  // Doctor Emergency Time-Off Handler
   const handleConfirmTimeOff = (e: React.FormEvent) => {
     e.preventDefault();
     const docId = currentUser?.role === 'DOCTOR' ? '1' : selectedDoctorId;
@@ -333,7 +378,7 @@ export default function HomePage() {
     const newTimeOff: DoctorTimeOff = {
       id: `TO-${Math.floor(100 + Math.random() * 900)}`,
       doctorId: docId,
-      doctorName: INITIAL_DOCTORS.find(d => d.id === docId)?.name || 'Dr. Alice Cherop',
+      doctorName: doctorsList.find(d => d.id === docId)?.name || 'Dr. Alice Cherop',
       startTime: timeOffStart,
       endTime: timeOffEnd,
       reason: timeOffReason
@@ -385,7 +430,7 @@ export default function HomePage() {
     return true;
   });
 
-  const selectedAdminDoctor = INITIAL_DOCTORS.find(d => d.id === selectedAdminDoctorId) || INITIAL_DOCTORS[0];
+  const selectedAdminDoctor = doctorsList.find(d => d.id === selectedAdminDoctorId) || doctorsList[0];
   const selectedDoctorAppointments = appointments.filter(a => a.doctorId === selectedAdminDoctor.id || a.doctorName.includes(selectedAdminDoctor.name));
 
   return (
@@ -710,7 +755,7 @@ export default function HomePage() {
                   <span style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase' }}>Active Doctors</span>
                   <Users size={20} />
                 </div>
-                <h3 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#0f172a' }}>{INITIAL_DOCTORS.length}</h3>
+                <h3 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#0f172a' }}>{doctorsList.length}</h3>
                 <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem' }}>Across 5 specialties</p>
               </div>
 
@@ -745,7 +790,7 @@ export default function HomePage() {
                 </h3>
 
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                  {INITIAL_DOCTORS.map(doc => {
+                  {doctorsList.map(doc => {
                     const docApptCount = appointments.filter(a => a.doctorId === doc.id || a.doctorName.includes(doc.name)).length;
                     const isSelected = doc.id === selectedAdminDoctor.id;
                     return (
@@ -942,7 +987,7 @@ export default function HomePage() {
                         value={selectedDoctorId} 
                         onChange={(e) => setSelectedDoctorId(e.target.value)}
                       >
-                        {INITIAL_DOCTORS.map(doc => (
+                        {doctorsList.map(doc => (
                           <option key={doc.id} value={doc.id}>{doc.name} ({doc.specialization})</option>
                         ))}
                       </select>
@@ -1247,7 +1292,7 @@ export default function HomePage() {
             </div>
 
             <div className="doctors-accordion-list">
-              {INITIAL_DOCTORS.map(doc => {
+              {doctorsList.map(doc => {
                 const isExpanded = !!expandedDoctorIds[doc.id];
                 return (
                   <div key={doc.id} className="doctor-accordion-item">
