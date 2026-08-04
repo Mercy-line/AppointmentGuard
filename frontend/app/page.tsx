@@ -339,7 +339,7 @@ export default function HomePage() {
           <div className="brand-icon">
             <Stethoscope size={24} />
           </div>
-          <span>MediCare Clinic</span>
+          <span>AppointmentGuard</span>
         </div>
 
         <div className="nav-links">
@@ -1064,11 +1064,11 @@ export default function HomePage() {
             <div className="brand-icon">
               <Stethoscope size={24} />
             </div>
-            <span>MediCare Clinic</span>
+            <span>AppointmentGuard</span>
           </div>
 
           <div style={{ color: '#94a3b8', fontSize: '0.9rem' }}>
-            © 2026 MediCare Clinic. All rights reserved. Concurrency Safe Booking Engine.
+            © 2026 AppointmentGuard. All rights reserved. Concurrency Safe Booking Engine.
           </div>
         </div>
       </footer>
@@ -1166,7 +1166,7 @@ export default function HomePage() {
               <div className="brand-icon" style={{ margin: '0 auto 1rem' }}>
                 <Lock size={22} />
               </div>
-              <h3 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a' }}>Sign In to MediCare</h3>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a' }}>Sign In to AppointmentGuard</h3>
               <p style={{ fontSize: '0.9rem', color: '#64748b', marginTop: '0.25rem' }}>Enter your credentials to access your dashboard.</p>
             </div>
 
