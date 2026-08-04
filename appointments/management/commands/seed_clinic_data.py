@@ -10,7 +10,11 @@ class Command(BaseCommand):
     help = "Seeds initial clinic data with 5 doctors, working hours, and sample patients."
 
     def handle(self, *args, **kwargs):
-        self.stdout.write(self.style.NOTICE("Seeding AppointmentGuard clinic data..."))
+        self.stdout.write(self.style.NOTICE("Refreshing AppointmentGuard clinic data..."))
+
+        # Clean legacy dummy doctor users
+        legacy_usernames = ['doctor_alice', 'doctor_bob', 'doctor_charlie', 'doctor_diana', 'doctor_evan']
+        User.objects.filter(username__in=legacy_usernames).delete()
 
         # Create admin user
         if not User.objects.filter(username='admin').exists():
@@ -22,13 +26,13 @@ class Command(BaseCommand):
             p = User.objects.create_user('patient_john', 'john@patient.com', 'PatientPass123!', role=UserRole.PATIENT, first_name='John', last_name='Doe')
             self.stdout.write(self.style.SUCCESS(f"Created Patient: {p.username} (pass: PatientPass123!)"))
 
-        # 5 Sample Doctors Data
+        # 5 Official Doctors Data
         doctors_data = [
             ("dr_alice", "Alice", "Cherop", "dr.alice@clinic.com", "Cardiology"),
-            ("dr_John", "John", "kimani", "dr.John@clinic.com", "General Practice"),
+            ("dr_john", "John", "Kimani", "dr.john@clinic.com", "General Practice"),
             ("dr_charlie", "Charlie", "Onyancha", "dr.charlie@clinic.com", "Pediatrics"),
             ("dr_diana", "Diana", "Atieno", "dr.diana@clinic.com", "Dermatology"),
-            ("dr_Evans", "Evans", "Muyoma", "dr.Evans@clinic.com", "Orthopedics"),
+            ("dr_evans", "Evans", "Muyoma", "dr.evans@clinic.com", "Orthopedics"),
         ]
 
         for username, first_name, last_name, email, spec in doctors_data:
@@ -42,14 +46,19 @@ class Command(BaseCommand):
                     'timezone': 'UTC'
                 }
             )
-            if created:
-                user.set_password('DoctorPass123!')
-                user.save()
+            user.first_name = first_name
+            user.last_name = last_name
+            user.email = email
+            user.set_password('DoctorPass123!')
+            user.save()
 
             doctor, doc_created = Doctor.objects.get_or_create(
                 user=user,
                 defaults={'specialization': spec, 'slot_duration_minutes': 30, 'is_active': True}
             )
+            doctor.specialization = spec
+            doctor.is_active = True
+            doctor.save()
 
             # Set working hours for Monday to Friday (0 to 4) 09:00 - 17:00
             for day in range(5):
@@ -61,4 +70,4 @@ class Command(BaseCommand):
 
             self.stdout.write(self.style.SUCCESS(f"Seeded Doctor: Dr. {first_name} {last_name} ({spec})"))
 
-        self.stdout.write(self.style.SUCCESS("🎉 Clinic data seeding completed!"))
+        self.stdout.write(self.style.SUCCESS("🎉 Clinic data seeding completed successfully!"))
