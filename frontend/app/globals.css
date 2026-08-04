@@ -68,13 +68,13 @@ body {
 .brand-icon {
   background: var(--primary);
   color: white;
-  width: 44px;
-  height: 44px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.35rem;
+  font-size: 1.25rem;
   box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
   flex-shrink: 0;
 }
@@ -83,14 +83,13 @@ body {
   display: flex;
   align-items: center;
   gap: 1.25rem;
-  flex-wrap: wrap;
 }
 
 .nav-link {
   text-decoration: none;
   color: #475569;
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   transition: color 0.2s ease;
   cursor: pointer;
 }
@@ -99,24 +98,67 @@ body {
   color: var(--primary);
 }
 
+/* Mobile Toggle Hamburger Button */
+.mobile-menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-dark);
+  cursor: pointer;
+  padding: 0.4rem;
+  border-radius: 8px;
+}
+
+.mobile-menu-toggle:hover {
+  background: #f1f5f9;
+}
+
+/* Mobile Menu Dropdown Drawer */
+.mobile-menu-drawer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background: #ffffff;
+  padding: 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+}
+
+.mobile-nav-link {
+  text-decoration: none;
+  color: #334155;
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 0.6rem 0.85rem;
+  border-radius: 8px;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mobile-nav-link:hover {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
 /* User Pill */
 .user-pill {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.5rem;
   background: var(--bg-tint);
-  padding: 0.45rem 1rem;
+  padding: 0.4rem 0.85rem;
   border-radius: 30px;
   border: 1px solid var(--border-color);
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   font-weight: 700;
-  flex-wrap: wrap;
 }
 
 .role-badge {
-  padding: 0.2rem 0.6rem;
+  padding: 0.15rem 0.5rem;
   border-radius: 20px;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 800;
   text-transform: uppercase;
   white-space: nowrap;
@@ -156,7 +198,7 @@ body {
   border-radius: 12px;
   padding: 0.85rem 1.25rem;
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -181,24 +223,24 @@ body {
 }
 
 .dash-banner h1 {
-  font-size: clamp(1.4rem, 4vw, 2rem);
+  font-size: clamp(1.3rem, 3.5vw, 1.9rem);
   font-weight: 800;
 }
 
 .dash-banner p {
   opacity: 0.9;
-  margin-top: 0.5rem;
-  font-size: clamp(0.88rem, 2.5vw, 1.05rem);
+  margin-top: 0.4rem;
+  font-size: clamp(0.85rem, 2.2vw, 1rem);
 }
 
 /* Buttons */
 .btn-login {
   background: var(--primary);
   color: white;
-  padding: 0.6rem 1.6rem;
+  padding: 0.55rem 1.4rem;
   border-radius: 30px;
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -213,10 +255,10 @@ body {
 .btn-logout {
   background: #f1f5f9;
   color: #475569;
-  padding: 0.5rem 1.25rem;
+  padding: 0.45rem 1.1rem;
   border-radius: 30px;
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   border: 1px solid var(--border-color);
   cursor: pointer;
   white-space: nowrap;
@@ -230,10 +272,10 @@ body {
 .btn-primary {
   background: var(--primary);
   color: white;
-  padding: 0.85rem 2rem;
+  padding: 0.8rem 1.75rem;
   border-radius: 30px;
   font-weight: 700;
-  font-size: 1rem;
+  font-size: 0.95rem;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -253,10 +295,10 @@ body {
   background: white;
   color: var(--text-dark);
   border: 1.5px solid var(--border-color);
-  padding: 0.85rem 2rem;
+  padding: 0.8rem 1.75rem;
   border-radius: 30px;
   font-weight: 700;
-  font-size: 1rem;
+  font-size: 0.95rem;
   cursor: pointer;
   transition: all 0.2s ease;
   display: inline-flex;
@@ -273,10 +315,10 @@ body {
 .btn-danger {
   background: #ef4444;
   color: white;
-  padding: 0.65rem 1.4rem;
+  padding: 0.55rem 1.25rem;
   border-radius: 30px;
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   border: none;
   cursor: pointer;
 }
@@ -288,10 +330,10 @@ body {
 .btn-warning {
   background: #f59e0b;
   color: white;
-  padding: 0.65rem 1.4rem;
+  padding: 0.55rem 1.25rem;
   border-radius: 30px;
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   border: none;
   cursor: pointer;
   white-space: nowrap;
@@ -302,12 +344,12 @@ body {
 }
 
 .btn-sm-outline {
-  padding: 0.55rem 1.3rem;
+  padding: 0.45rem 1.1rem;
   border-radius: 20px;
   border: 1.5px solid var(--border-color);
   background: white;
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
@@ -339,8 +381,8 @@ body {
   background: white;
   border-radius: 24px;
   width: 100%;
-  max-width: 500px;
-  padding: 2.2rem;
+  max-width: 480px;
+  padding: 1.75rem;
   box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
   max-height: 90vh;
   overflow-y: auto;
@@ -348,8 +390,8 @@ body {
 
 /* Section Styling */
 .section {
-  padding: 6rem 4rem;
-  min-height: 85vh;
+  padding: 5rem 4rem;
+  min-height: 80vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -360,11 +402,11 @@ body {
 }
 
 .section-header {
-  margin-bottom: 2.5rem;
+  margin-bottom: 2rem;
 }
 
 .section-title {
-  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  font-size: clamp(1.5rem, 3.5vw, 2.1rem);
   font-weight: 800;
   color: var(--text-dark);
   letter-spacing: -0.5px;
@@ -372,8 +414,8 @@ body {
 
 .section-subtitle {
   color: var(--text-muted);
-  font-size: 1.05rem;
-  margin-top: 0.5rem;
+  font-size: 0.95rem;
+  margin-top: 0.4rem;
 }
 
 /* Hero Section */
@@ -384,11 +426,11 @@ body {
   align-items: center;
   max-width: 1280px;
   margin: 0 auto;
-  min-height: 60vh;
+  min-height: 55vh;
 }
 
 .hero-title {
-  font-size: clamp(2rem, 5vw, 3.2rem);
+  font-size: clamp(1.9rem, 4.5vw, 3rem);
   font-weight: 800;
   line-height: 1.15;
   color: var(--text-dark);
@@ -396,10 +438,10 @@ body {
 }
 
 .hero-subtitle {
-  font-size: clamp(0.95rem, 2.5vw, 1.15rem);
+  font-size: clamp(0.9rem, 2.2vw, 1.1rem);
   color: var(--text-muted);
   line-height: 1.6;
-  margin: 1.5rem 0 2.5rem;
+  margin: 1.25rem 0 2rem;
 }
 
 .hero-actions {
@@ -411,7 +453,7 @@ body {
 .hero-card-img {
   background: white;
   border-radius: var(--radius-xl);
-  padding: 2rem;
+  padding: 1.75rem;
   box-shadow: var(--shadow-card);
   display: flex;
   justify-content: center;
@@ -422,7 +464,7 @@ body {
 .search-card {
   background: white;
   border-radius: var(--radius-xl);
-  padding: 2.5rem;
+  padding: 2rem;
   box-shadow: var(--shadow-card);
   border: 1px solid var(--border-color);
   max-width: 1000px;
@@ -432,27 +474,27 @@ body {
 .search-grid {
   display: grid;
   grid-template-columns: 1fr 1fr auto;
-  gap: 1.5rem;
+  gap: 1.25rem;
   align-items: end;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .form-label {
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   font-weight: 700;
   color: var(--text-dark);
 }
 
 .form-select, .form-input {
-  padding: 0.9rem 1.25rem;
+  padding: 0.8rem 1.1rem;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
-  font-size: 1rem;
+  font-size: 0.92rem;
   outline: none;
   background: white;
   width: 100%;
@@ -465,30 +507,30 @@ body {
 
 /* Slot Chips */
 .slots-container {
-  margin-top: 2.5rem;
+  margin-top: 2rem;
 }
 
 .slots-title {
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   font-weight: 700;
   color: var(--text-muted);
-  margin-bottom: 1rem;
+  margin-bottom: 0.85rem;
 }
 
 .slots-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.85rem;
-  margin-bottom: 2rem;
+  gap: 0.75rem;
+  margin-bottom: 1.75rem;
 }
 
 .slot-chip {
-  padding: 0.65rem 1.4rem;
+  padding: 0.55rem 1.2rem;
   border-radius: 30px;
   border: 1.5px solid var(--border-color);
   background: white;
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   cursor: pointer;
   transition: all 0.2s ease;
   color: var(--text-dark);
@@ -507,71 +549,49 @@ body {
   box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
 }
 
-/* Doctors Grid */
-.doctors-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 2rem;
-  max-width: 1280px;
-  margin: 0 auto;
-}
-
-.doctor-card {
-  background: white;
-  border-radius: var(--radius-xl);
-  padding: 2.2rem;
-  box-shadow: var(--shadow-card);
-  border: 1px solid var(--border-color);
-  transition: all 0.25s ease;
+/* Doctors Downward List Accordion */
+.doctors-accordion-list {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  gap: 0.85rem;
+  max-width: 1280px;
+  margin: 0 auto;
+  width: 100%;
 }
 
-.doctor-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-hover);
+.doctor-accordion-item {
+  background: white;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: all 0.2s ease;
 }
 
-.doctor-avatar {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: #cff4fc;
-  color: #087990;
+.doctor-accordion-header {
+  padding: 1rem 1.5rem;
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  font-size: 1.35rem;
-  font-weight: 800;
-  margin-bottom: 1.5rem;
-  flex-shrink: 0;
+  cursor: pointer;
+  background: #ffffff;
 }
 
-.doctor-name {
-  font-size: 1.3rem;
-  font-weight: 800;
-  color: var(--text-dark);
+.doctor-accordion-header:hover {
+  background: #f8fafc;
 }
 
-.doctor-spec {
-  color: var(--primary);
-  font-weight: 600;
-  font-size: 0.95rem;
-  margin: 0.25rem 0 0.5rem;
-}
-
-.doctor-hours {
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  margin-bottom: 1.5rem;
+.doctor-accordion-content {
+  padding: 1.25rem 1.5rem;
+  background: #f8fafc;
+  border-top: 1px solid var(--border-color);
 }
 
 /* Feature Cards */
 .cards-grid-3 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 2rem;
+  gap: 1.75rem;
   max-width: 1280px;
   margin: 0 auto;
 }
@@ -579,7 +599,7 @@ body {
 .cards-grid-4 {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 2rem;
+  gap: 1.75rem;
   max-width: 1280px;
   margin: 0 auto;
 }
@@ -587,35 +607,35 @@ body {
 .feature-card {
   background: white;
   border-radius: var(--radius-xl);
-  padding: 2.2rem;
+  padding: 1.75rem;
   box-shadow: var(--shadow-card);
   border: 1px solid var(--border-color);
 }
 
 .feature-icon-badge {
-  width: 52px;
-  height: 52px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   background: #cff4fc;
   color: #087990;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.35rem;
-  margin-bottom: 1.5rem;
+  font-size: 1.2rem;
+  margin-bottom: 1.25rem;
   flex-shrink: 0;
 }
 
 .feature-title {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 800;
   color: var(--text-dark);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4rem;
 }
 
 .feature-desc {
   color: var(--text-muted);
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   line-height: 1.5;
 }
 
@@ -623,7 +643,7 @@ body {
 .services-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
+  gap: 1.25rem;
   max-width: 1280px;
   margin: 0 auto;
 }
@@ -631,14 +651,14 @@ body {
 .service-card {
   background: white;
   border-radius: var(--radius-lg);
-  padding: 1.75rem 2rem;
+  padding: 1.5rem 1.75rem;
   display: flex;
   align-items: center;
-  gap: 1.25rem;
+  gap: 1rem;
   box-shadow: var(--shadow-card);
   border: 1px solid var(--border-color);
   font-weight: 700;
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   color: var(--text-dark);
 }
 
@@ -646,7 +666,7 @@ body {
 .footer {
   background: white;
   border-top: 1px solid var(--border-color);
-  padding: 3rem 4rem;
+  padding: 2.5rem 4rem;
   margin-top: auto;
 }
 
@@ -657,27 +677,26 @@ body {
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
 /* ==========================================
-   RESPONSIVE MEDIA QUERIES (ANY DEVICE)
+   RESPONSIVE MEDIA QUERIES
    ========================================== */
 
-/* Tablets & Small Laptops (<= 1024px) */
 @media (max-width: 1024px) {
   .navbar {
-    padding: 1rem 2rem;
+    padding: 0.85rem 2rem;
   }
   .dashboard-container {
-    padding: 2.2rem 2rem;
+    padding: 2rem 1.5rem;
   }
   .section {
-    padding: 4rem 2rem;
+    padding: 4rem 1.75rem;
   }
   .hero-container {
     grid-template-columns: 1fr;
-    gap: 2.5rem;
+    gap: 2rem;
     text-align: center;
   }
   .hero-actions {
@@ -693,49 +712,46 @@ body {
     grid-template-columns: repeat(2, 1fr);
   }
   .footer {
-    padding: 2.5rem 2rem;
+    padding: 2rem;
   }
 }
 
-/* Mobile Devices & Large Phones (<= 768px) */
+/* Mobile Screens (< 768px) */
 @media (max-width: 768px) {
+  .desktop-nav {
+    display: none !important;
+  }
+  .mobile-menu-toggle {
+    display: block !important;
+  }
   .navbar {
-    padding: 0.85rem 1rem;
-    flex-direction: column;
-    gap: 0.85rem;
-    align-items: stretch;
-  }
-  .brand {
-    justify-content: center;
-  }
-  .nav-links {
-    justify-content: center;
-    gap: 0.5rem;
+    padding: 0.75rem 1rem;
   }
   .dashboard-container {
-    padding: 1.5rem 1rem;
+    padding: 1.25rem 0.85rem;
   }
   .dashboard-tabs {
     flex-direction: column;
-    padding: 0.75rem;
-    gap: 0.6rem;
+    padding: 0.6rem;
+    gap: 0.5rem;
   }
   .dashboard-tab-btn {
     width: 100%;
     min-width: 100%;
-    padding: 0.75rem 1rem;
+    padding: 0.75rem;
+    font-size: 0.85rem;
   }
   .dash-banner {
     flex-direction: column;
     align-items: flex-start;
-    padding: 1.5rem 1.25rem;
+    padding: 1.35rem 1rem;
   }
   .section {
-    padding: 3rem 1rem;
+    padding: 2.5rem 1rem;
     min-height: auto;
   }
   .search-card {
-    padding: 1.25rem;
+    padding: 1.1rem;
   }
   .search-grid {
     grid-template-columns: 1fr;
@@ -744,39 +760,39 @@ body {
     grid-template-columns: 1fr;
   }
   .hero-card-img {
-    padding: 1rem;
+    padding: 0.85rem;
   }
   .modal-content {
-    padding: 1.5rem;
+    padding: 1.25rem;
+    font-size: 0.85rem;
   }
   .footer {
-    padding: 2rem 1rem;
+    padding: 1.5rem 1rem;
   }
   .footer-inner {
     flex-direction: column;
     text-align: center;
+    font-size: 0.82rem;
   }
 }
 
-/* Small Mobile Phones (<= 480px) */
+/* Small Mobile Phones (< 480px) */
 @media (max-width: 480px) {
   .brand {
-    font-size: 1.15rem;
+    font-size: 1.1rem;
   }
   .brand-icon {
-    width: 36px;
-    height: 36px;
-  }
-  .user-pill {
-    width: 100%;
-    justify-content: center;
+    width: 34px;
+    height: 34px;
   }
   .btn-primary, .btn-outline {
     width: 100%;
-    padding: 0.8rem 1.25rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.88rem;
   }
   .slot-chip {
     width: 100%;
     text-align: center;
+    font-size: 0.82rem;
   }
 }
