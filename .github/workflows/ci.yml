@@ -50,7 +50,7 @@ jobs:
 
       - name: Run Pytest Modular Test Suite
         env:
-          SECRET_KEY: ${{ secrets.SECRET_KEY || 'ci-testing-secret-key-12345' }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
           DEBUG: 'False'
           DATABASE_URL: postgres://appointment_user:appointment_pass@localhost:5432/appointmentguard_test_db
         run: |
