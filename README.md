@@ -254,8 +254,47 @@ AppointmentGuard uses a decoupled layered architecture separating domain entitie
 > * **Public Live Application URL**: [https://appointmentguard.onrender.com](https://appointmentguard.onrender.com) *(REST API: `https://appointmentguard.onrender.com/api/doctors/`)*
 > * **Deployment Trigger Branch & Mechanism**: Pushes targeting the **`production`** branch trigger automated continuous deployment via GitHub Actions ([`.github/workflows/cd.yml`](.github/workflows/cd.yml)). Upon successful regression testing and container security verification, GitHub Actions dispatches an HTTP POST request to the Render deploy hook (`RENDER_DEPLOY_HOOK_URL`), automatically building and deploying the live production web service and managed PostgreSQL database without downtime.
 > * **Pipeline Description**:
->   * **CI Pipeline ([`.github/workflows/ci.yml`](.github/workflows/ci.yml))**: Runs on `develop` branch pushes and pull requests. Spins up an isolated PostgreSQL 16 container, lints code with `flake8`, and runs the full 20-test `pytest` suite.
->   * **CD Pipeline ([`.github/workflows/cd.yml`](.github/workflows/cd.yml))**: Runs on `production` branch pushes. Executes pre-deployment regression tests, builds the Docker container image, verifies non-root user execution (`UID 10001`), and dispatches the deploy webhook to publish live updates on Render.
+>   * **CI Pipeline ([`.github/workflows/ci.yml`](.github/workflows/ci.yml))**: Runs on `develop`, `production`, and `main` branch pull requests. Spins up an isolated PostgreSQL 16 container, lints code with `flake8`, and runs the full 20-test `pytest` suite.
+>   * **CD Pipeline ([`.github/workflows/cd.yml`](.github/workflows/cd.yml))**: Runs on `production` branch merges. Executes pre-deployment regression tests, builds the Docker container image, verifies non-root user execution (`UID 10001`), and dispatches the deploy webhook to publish live updates on Render.
+
+### Automated Workflow Summary
+
+```mermaid
+flowchart TD
+    PR["Developer Opens Pull Request"] --> CI["CI Pipeline: .github/workflows/ci.yml"]
+    CI --> LINT["Runs Flake8 Code Quality Linting"]
+    CI --> TEST["Runs 20 Pytest Tests on Postgres 16"]
+    
+    LINT --> MERGE["PR Reviewed & Merged"]
+    TEST --> MERGE
+    
+    MERGE --> BRANCH["Target Branch: production"]
+    BRANCH --> CD["CD Pipeline: .github/workflows/cd.yml"]
+    
+    CD --> REG["Runs Pytest Regression Tests"]
+    CD --> DOCKER["Builds Non-Root Docker Image (UID 10001)"]
+    CD --> RENDER["Dispatches Webhook to Deploy Live on Render"]
+```
+
+```
+                  [ Developer Opens Pull Request ]
+                                 |
+                                 v
+               [ CI Pipeline: .github/workflows/ci.yml ]
+               ├── Runs Flake8 Linting
+               └── Runs 20 Pytest Tests on Postgres 16
+                                 |
+                       [ PR Reviewed & Merged ]
+                                 |
+                                 v
+                     (Target Branch: production)
+                                 |
+                                 v
+               [ CD Pipeline: .github/workflows/cd.yml ]
+               ├── Runs Pytest Regression Tests
+               ├── Builds Non-Root Docker Image (UID 10001)
+               └── Dispatches Webhook to Deploy on Render
+```
 
 ### A. Continuous Integration (CI Pipeline — `.github/workflows/ci.yml`)
 * **Trigger**: Triggered automatically on all pushes and pull requests targeting the `develop` branch.
