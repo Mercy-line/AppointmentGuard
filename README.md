@@ -252,7 +252,7 @@ AppointmentGuard uses a decoupled layered architecture separating domain entitie
 
 ## 7. Deployment, Containerization & CI/CD Architecture
 
-> ### 🚀 Live Production Deployment & CI/CD Summary
+> ### Live Production Deployment & CI/CD Summary
 > * **Public Live Application URL**: [https://appointmentguard.onrender.com](https://appointmentguard.onrender.com) *(REST API: `https://appointmentguard.onrender.com/api/doctors/`)*
 > 
 > > [!NOTE]
