@@ -722,31 +722,6 @@ const DEFAULT_DOCTORS: Doctor[] = [
         
         /* ROLE-BASED DASHBOARD VIEW */
         <div className="dashboard-container">
-          
-          {/* WELCOME BANNER (HIDDEN ON MOBILE VIEW) */}
-          <div className="dash-banner">
-            <div>
-              <h1>Welcome back, {currentUser.name}!</h1>
-              <p>
-                {currentUser.role === 'PATIENT' && 'Patient Portal — Select an action below to manage your visits or book a new appointment.'}
-                {currentUser.role === 'DOCTOR' && `Doctor Portal — ${currentUser.specialization || 'General Practice'} Schedule & Cancellation Logs.`}
-                {currentUser.role === 'ADMIN' && 'System Administration — Select an action tab below to manage system metrics, doctors, or master log.'}
-              </p>
-            </div>
-            
-            {currentUser.role === 'DOCTOR' && (
-              <button type="button" className="btn-primary" onClick={() => setIsTimeOffModalOpen(true)}>
-                <Calendar size={16} /> Set Time-Off
-              </button>
-            )}
-
-            {currentUser.role === 'ADMIN' && (
-              <button type="button" className="btn-primary" onClick={() => { setRegError(null); setIsRegisterModalOpen(true); }}>
-                <PlusCircle size={16} /> Add New User to DB
-              </button>
-            )}
-          </div>
-
           {adminSuccessMsg && (
             <div style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', color: '#065f46', padding: '0.75rem 1rem', borderRadius: '12px', fontSize: '0.85rem', marginBottom: '1rem', fontWeight: 600 }}>
               {adminSuccessMsg}
