@@ -96,26 +96,51 @@ export default function HomePage() {
   const [passwordChangeSuccess, setPasswordChangeSuccess] = useState<string | null>(null);
   const [passwordChangeError, setPasswordChangeError] = useState<string | null>(null);
 
-  // Dynamic User Local Timezone Detection (EAT, UTC, EST, etc.)
-  const getUserTimezoneBadge = () => {
+  // Timezone Selector Options (Auto Location Detect + Manual User Selection)
+  const TIMEZONE_OPTIONS = [
+    { value: 'AUTO', label: 'Auto (Detected)' },
+    { value: 'Africa/Nairobi', label: 'EAT (UTC+3 - East Africa)' },
+    { value: 'UTC', label: 'UTC (UTC+0 - Universal)' },
+    { value: 'America/New_York', label: 'EST (UTC-5 - New York)' },
+    { value: 'America/Los_Angeles', label: 'PST (UTC-8 - Los Angeles)' },
+    { value: 'Europe/London', label: 'GMT (UTC+0 - London)' },
+    { value: 'Europe/Paris', label: 'CET (UTC+1 - Paris)' },
+    { value: 'Asia/Dubai', label: 'GST (UTC+4 - Dubai)' },
+    { value: 'Asia/Kolkata', label: 'IST (UTC+5:30 - India)' },
+    { value: 'Asia/Tokyo', label: 'JST (UTC+9 - Tokyo)' },
+  ];
+
+  const [selectedTimezone, setSelectedTimezone] = useState<string>('AUTO');
+
+  const getTimezoneBadgeDisplay = (tzChoice: string) => {
     try {
-      const timeZoneName = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      let tzName = tzChoice;
+      if (tzChoice === 'AUTO') {
+        tzName = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Africa/Nairobi';
+      }
+
       const offsetMinutes = -new Date().getTimezoneOffset();
       const hours = Math.floor(Math.abs(offsetMinutes) / 60);
       const mins = Math.abs(offsetMinutes) % 60;
       const sign = offsetMinutes >= 0 ? '+' : '-';
       const formattedOffset = `UTC${sign}${hours}${mins > 0 ? `:${mins}` : ''}`;
 
-      let shortName = timeZoneName.split('/')[1]?.replace(/_/g, ' ') || 'Local';
-      if (timeZoneName === 'Africa/Nairobi') shortName = 'EAT';
-      if (timeZoneName === 'UTC' || offsetMinutes === 0) shortName = 'UTC';
+      let shortName = tzName.split('/')[1]?.replace(/_/g, ' ') || 'Local';
+      if (tzName === 'Africa/Nairobi') shortName = 'EAT';
+      if (tzName === 'UTC') shortName = 'UTC';
+      if (tzName === 'America/New_York') shortName = 'EST';
+      if (tzName === 'America/Los_Angeles') shortName = 'PST';
+      if (tzName === 'Europe/London') shortName = 'GMT';
+      if (tzName === 'Europe/Paris') shortName = 'CET';
+      if (tzName === 'Asia/Dubai') shortName = 'GST';
+      if (tzName === 'Asia/Kolkata') shortName = 'IST';
+      if (tzName === 'Asia/Tokyo') shortName = 'JST';
 
-      return { zoneName: shortName, offsetStr: formattedOffset };
+      return `${shortName} (${formattedOffset})`;
     } catch {
-      return { zoneName: 'EAT', offsetStr: 'UTC+3' };
+      return 'EAT (UTC+3)';
     }
   };
-  const userTz = getUserTimezoneBadge();
 
   // Booking & Appointments State (Local Timezone Date Calculation)
   const getTodayDateStr = () => {
@@ -562,21 +587,28 @@ const DEFAULT_DOCTORS: Doctor[] = [
               <div className="user-pill">
                 <span>{currentUser.name}</span>
                 <span className={`role-badge role-${currentUser.role.toLowerCase()}`}>{currentUser.role}</span>
-                <span style={{ 
-                  display: 'inline-flex', 
-                  alignItems: 'center', 
-                  gap: '0.25rem', 
-                  background: '#f0f9ff', 
-                  color: '#0369a1', 
-                  border: '1px solid #bae6fd', 
-                  padding: '0.2rem 0.55rem', 
-                  borderRadius: '12px', 
-                  fontSize: '0.72rem', 
-                  fontWeight: 700 
-                }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', background: '#f0f9ff', border: '1px solid #bae6fd', padding: '0.15rem 0.45rem', borderRadius: '12px' }}>
                   <Globe size={11} color="#0284c7" />
-                  {userTz.zoneName} ({userTz.offsetStr})
-                </span>
+                  <select
+                    value={selectedTimezone}
+                    onChange={(e) => setSelectedTimezone(e.target.value)}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#0369a1',
+                      fontSize: '0.72rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      outline: 'none'
+                    }}
+                  >
+                    {TIMEZONE_OPTIONS.map(opt => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.value === 'AUTO' ? `Auto: ${getTimezoneBadgeDisplay('AUTO')}` : opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               {/* SETTINGS GEAR ICON BUTTON */}
@@ -627,20 +659,28 @@ const DEFAULT_DOCTORS: Doctor[] = [
                   <span>{currentUser.name}</span>
                   <span className={`role-badge role-${currentUser.role.toLowerCase()}`}>{currentUser.role}</span>
                 </div>
-                <span style={{ 
-                  display: 'inline-flex', 
-                  alignItems: 'center', 
-                  gap: '0.2rem', 
-                  background: 'white', 
-                  color: '#0369a1', 
-                  padding: '0.15rem 0.45rem', 
-                  borderRadius: '10px', 
-                  fontSize: '0.72rem', 
-                  fontWeight: 700 
-                }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem', background: 'white', border: '1px solid #bae6fd', padding: '0.15rem 0.45rem', borderRadius: '10px' }}>
                   <Globe size={11} color="#0284c7" />
-                  {userTz.zoneName} ({userTz.offsetStr})
-                </span>
+                  <select
+                    value={selectedTimezone}
+                    onChange={(e) => setSelectedTimezone(e.target.value)}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#0369a1',
+                      fontSize: '0.72rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      outline: 'none'
+                    }}
+                  >
+                    {TIMEZONE_OPTIONS.map(opt => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.value === 'AUTO' ? `Auto: ${getTimezoneBadgeDisplay('AUTO')}` : opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <button 
