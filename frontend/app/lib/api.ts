@@ -92,3 +92,29 @@ export async function fetchPatientAppointmentsAPI(patientId: string) {
     return null;
   }
 }
+
+export async function loginAPI(email: string, password: string) {
+  const res = await fetch(`${API_BASE_URL}/api/auth/login/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.error || 'Invalid email address or password.');
+  }
+  return await res.json();
+}
+
+export async function registerAPI(data: { email: string; password: string; name: string; role?: string; specialization?: string }) {
+  const res = await fetch(`${API_BASE_URL}/api/auth/register/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.error || 'Failed to create account.');
+  }
+  return await res.json();
+}
