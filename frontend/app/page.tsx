@@ -97,8 +97,9 @@ export default function HomePage() {
   const [passwordChangeError, setPasswordChangeError] = useState<string | null>(null);
 
   // Booking & Appointments State
+  const getTodayDateStr = () => new Date().toISOString().split('T')[0];
   const [selectedDoctorId, setSelectedDoctorId] = useState<string>('');
-  const [selectedDate, setSelectedDate] = useState<string>('2026-08-05');
+  const [selectedDate, setSelectedDate] = useState<string>(getTodayDateStr());
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
   const [isBookModalOpen, setIsBookModalOpen] = useState<boolean>(false);
   const [patientBookingName, setPatientBookingName] = useState<string>('John Doe');
@@ -112,7 +113,7 @@ export default function HomePage() {
   const [cancellationReasonInput, setCancellationReasonInput] = useState<string>('');
   
   const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState<boolean>(false);
-  const [rescheduleDate, setRescheduleDate] = useState<string>('2026-08-07');
+  const [rescheduleDate, setRescheduleDate] = useState<string>(getTodayDateStr());
   const [rescheduleTimeSlot, setRescheduleTimeSlot] = useState<string | null>(null);
 
   // Doctor Time-Off State
@@ -326,10 +327,40 @@ const DEFAULT_DOCTORS: Doctor[] = [
     setConfirmPasswordInput('');
   };
 
+  // Enforce Rule #4: Appointments must be booked at least 1 hour in advance of current system time
+  const isSlotValidWithAdvanceNotice = (slotTimeStr: string, dateStr: string): boolean => {
+    try {
+      const now = new Date();
+      const minBookingTime = new Date(now.getTime() + 60 * 60 * 1000);
+
+      const [time, period] = slotTimeStr.split(' ');
+      let [hours, minutes] = time.split(':').map(Number);
+      if (period === 'PM' && hours < 12) hours += 12;
+      if (period === 'AM' && hours === 12) hours = 0;
+
+      const [year, month, day] = dateStr.split('-').map(Number);
+      const slotDateTime = new Date(year, month - 1, day, hours, minutes, 0);
+
+      return slotDateTime >= minBookingTime;
+    } catch {
+      return true;
+    }
+  };
+
   // Booking Submit with Django REST API Call
   const handleBookSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedTimeSlot) return;
+
+    if (selectedDate < getTodayDateStr()) {
+      alert("Appointments cannot be booked in the past. Please select today or a future date.");
+      return;
+    }
+
+    if (!isSlotValidWithAdvanceNotice(selectedTimeSlot, selectedDate)) {
+      alert("Appointments must be booked at least 1 hour in advance of current system time.");
+      return;
+    }
 
     const doc = doctorsList.find(d => d.id === selectedDoctorId);
     
@@ -1081,6 +1112,7 @@ const DEFAULT_DOCTORS: Doctor[] = [
                       <label className="form-label">Date</label>
                       <input 
                         type="date" 
+                        min={getTodayDateStr()}
                         className="form-input"
                         value={selectedDate} 
                         onChange={(e) => setSelectedDate(e.target.value)}
@@ -1093,18 +1125,28 @@ const DEFAULT_DOCTORS: Doctor[] = [
                   </div>
 
                   <div className="slots-container">
-                    <div className="slots-title">Available 30-minute time slots</div>
+                    <div className="slots-title">Available 30-minute time slots (Min. 1 hr in advance)</div>
                     <div className="slots-grid">
-                      {DEFAULT_TIME_SLOTS.map(slot => (
-                        <button
-                          type="button"
-                          key={slot.time}
-                          className={`slot-chip ${selectedTimeSlot === slot.time ? 'selected' : ''}`}
-                          onClick={() => setSelectedTimeSlot(slot.time)}
-                        >
-                          {slot.time}
-                        </button>
-                      ))}
+                      {DEFAULT_TIME_SLOTS.map(slot => {
+                        const isValidAdvance = isSlotValidWithAdvanceNotice(slot.time, selectedDate);
+                        return (
+                          <button
+                            type="button"
+                            key={slot.time}
+                            disabled={!isValidAdvance}
+                            className={`slot-chip ${selectedTimeSlot === slot.time ? 'selected' : ''}`}
+                            style={{
+                              opacity: isValidAdvance ? 1 : 0.45,
+                              cursor: isValidAdvance ? 'pointer' : 'not-allowed',
+                              background: !isValidAdvance ? '#f1f5f9' : undefined,
+                              color: !isValidAdvance ? '#94a3b8' : undefined
+                            }}
+                            onClick={() => isValidAdvance && setSelectedTimeSlot(slot.time)}
+                          >
+                            {slot.time}
+                          </button>
+                        );
+                      })}
                     </div>
 
                     <button 
@@ -1829,6 +1871,7 @@ const DEFAULT_DOCTORS: Doctor[] = [
               <label className="form-label">Select New Date</label>
               <input 
                 type="date" 
+                min={getTodayDateStr()}
                 className="form-input"
                 value={rescheduleDate}
                 onChange={(e) => setRescheduleDate(e.target.value)}
