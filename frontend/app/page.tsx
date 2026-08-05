@@ -864,7 +864,7 @@ const DEFAULT_DOCTORS: Doctor[] = [
                 onClick={() => setAdminFilterTab('ADMIN_OVERVIEW')}
               >
                 <Activity size={14} /> 
-                <span className="tab-label-desktop">System Metrics Overview</span>
+                <span className="tab-label-desktop">Overview</span>
                 <span className="tab-label-mobile">Metrics</span>
               </button>
 
@@ -879,7 +879,7 @@ const DEFAULT_DOCTORS: Doctor[] = [
                 onClick={() => setAdminFilterTab('ADMIN_DOCTORS')}
               >
                 <Users size={14} /> 
-                <span className="tab-label-desktop">Doctors & Assigned Appointments</span>
+                <span className="tab-label-desktop">Doctors</span>
                 <span className="tab-label-mobile">Doctors</span>
               </button>
 
@@ -894,7 +894,7 @@ const DEFAULT_DOCTORS: Doctor[] = [
                 onClick={() => setAdminFilterTab('ADMIN_PATIENTS')}
               >
                 <UserIcon size={14} /> 
-                <span className="tab-label-desktop">Registered Patients</span>
+                <span className="tab-label-desktop">Patients</span>
                 <span className="tab-label-mobile">Patients</span>
               </button>
 
@@ -909,8 +909,8 @@ const DEFAULT_DOCTORS: Doctor[] = [
                 onClick={() => setAdminFilterTab('ADMIN_APPOINTMENTS')}
               >
                 <FileText size={14} /> 
-                <span className="tab-label-desktop">All Appointments Master Log</span>
-                <span className="tab-label-mobile">Master Log</span>
+                <span className="tab-label-desktop">All Logs</span>
+                <span className="tab-label-mobile">All Log</span>
               </button>
             </div>
           )}
