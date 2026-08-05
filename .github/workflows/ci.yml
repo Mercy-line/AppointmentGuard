@@ -2,9 +2,9 @@ name: AppointmentGuard CI Pipeline
 
 on:
   push:
-    branches: [ develop, production, main ]
+    branches: [ "**" ]
   pull_request:
-    branches: [ develop, production, main ]
+    branches: [ "**" ]
 
 jobs:
   test:
