@@ -50,7 +50,7 @@ jobs:
       - name: Build & Test Non-Root Docker Image
         run: |
           docker build -t appointmentguard:latest .
-          CONTAINER_USER=$(docker run --rm appointmentguard:latest id -u)
+          CONTAINER_USER=$(docker run --rm --entrypoint="" appointmentguard:latest id -u)
           echo "Verified Container execution UID: $CONTAINER_USER"
           if [ "$CONTAINER_USER" != "10001" ]; then
             echo "Error: Container must run as non-root user (UID 10001)"
