@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000';
 
 export async function fetchDoctorsFromAPI() {
   try {
@@ -35,7 +35,7 @@ export async function bookAppointmentAPI(doctorId: string, startTimeIso: string,
       }),
     });
     if (!res.ok) {
-      const errData = await res.json();
+      const errData = await res.json().catch(() => ({}));
       throw new Error(errData.error || errData.detail || 'Failed to book appointment');
     }
     return await res.json();
@@ -53,7 +53,7 @@ export async function cancelAppointmentAPI(appointmentId: string, reason: string
       body: JSON.stringify({ reason }),
     });
     if (!res.ok) {
-      const errData = await res.json();
+      const errData = await res.json().catch(() => ({}));
       throw new Error(errData.error || errData.detail || 'Failed to cancel appointment');
     }
     return await res.json();
@@ -71,7 +71,7 @@ export async function rescheduleAppointmentAPI(appointmentId: string, newStartTi
       body: JSON.stringify({ new_start_time: newStartTimeIso }),
     });
     if (!res.ok) {
-      const errData = await res.json();
+      const errData = await res.json().catch(() => ({}));
       throw new Error(errData.error || errData.detail || 'Failed to reschedule appointment');
     }
     return await res.json();
@@ -101,7 +101,7 @@ export async function loginAPI(email: string, password: string) {
   });
   if (!res.ok) {
     const errData = await res.json().catch(() => ({}));
-    throw new Error(errData.error || 'Invalid email address or password.');
+    throw new Error(errData.error || errData.detail || 'Invalid email address or password.');
   }
   return await res.json();
 }
@@ -114,7 +114,7 @@ export async function registerAPI(data: { email: string; password: string; name:
   });
   if (!res.ok) {
     const errData = await res.json().catch(() => ({}));
-    throw new Error(errData.error || 'Failed to create account.');
+    throw new Error(errData.error || errData.detail || `Error (${res.status}): Unable to process account registration.`);
   }
   return await res.json();
 }
