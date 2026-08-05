@@ -9,6 +9,21 @@ jobs:
     name: Build Docker Container & Trigger Deployment
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: appointmentguard_test_db
+          POSTGRES_USER: appointment_user
+          POSTGRES_PASSWORD: appointment_pass
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
@@ -17,20 +32,24 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
       - name: Run Pre-Deployment Test Checks
         env:
           SECRET_KEY: ${{ secrets.SECRET_KEY || 'ci-testing-secret-key-12345' }}
           DEBUG: 'False'
+          DATABASE_URL: postgres://appointment_user:appointment_pass@localhost:5432/appointmentguard_test_db
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
           pytest --tb=short
 
       - name: Build & Test Non-Root Docker Image
         run: |
           docker build -t appointmentguard:latest .
-          # Verify container user is non-root appuser (UID 10001)
           CONTAINER_USER=$(docker run --rm appointmentguard:latest id -u)
           echo "Verified Container execution UID: $CONTAINER_USER"
           if [ "$CONTAINER_USER" != "10001" ]; then
@@ -39,8 +58,12 @@ jobs:
           fi
 
       - name: Trigger Cloud Platform Deployment Webhook
-        if: env.DEPLOY_HOOK_URL != ''
         env:
           DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
         run: |
-          curl -X POST "$DEPLOY_HOOK_URL"
+          if [ -n "$DEPLOY_HOOK_URL" ]; then
+            echo "Dispatching deploy webhook to Render..."
+            curl -X POST "$DEPLOY_HOOK_URL"
+          else
+            echo "RENDER_DEPLOY_HOOK_URL secret not set in repository settings. Skipping webhook dispatch."
+          fi
