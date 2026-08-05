@@ -5,7 +5,7 @@ import {
   Stethoscope, Calendar, Clock, User as UserIcon, CheckCircle2, Shield,
   Activity, Heart, Baby, Syringe, TestTube, RefreshCw, LogOut, Lock, 
   AlertTriangle, AlertCircle, PlusCircle, Settings, Key, Check, Users, FileText,
-  Menu, X, ChevronDown, ChevronUp
+  Menu, X, ChevronDown, ChevronUp, Eye, EyeOff
 } from 'lucide-react';
 import type { User, Doctor, TimeSlot, Appointment, DoctorTimeOff } from './types';
 import { 
@@ -14,7 +14,8 @@ import {
   bookAppointmentAPI, 
   cancelAppointmentAPI, 
   rescheduleAppointmentAPI, 
-  fetchPatientAppointmentsAPI 
+  fetchPatientAppointmentsAPI,
+  loginAPI
 } from './lib/api';
 
 // Backend Accounts Mapping
@@ -64,9 +65,22 @@ export default function HomePage() {
   // Auth State
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
-  const [loginEmail, setLoginEmail] = useState<string>('john@patient.com');
-  const [loginPassword, setLoginPassword] = useState<string>('PatientPass123!');
+  const [loginEmail, setLoginEmail] = useState<string>('');
+  const [loginPassword, setLoginPassword] = useState<string>('');
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
   const [authError, setAuthError] = useState<string | null>(null);
+
+  // Registration State
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState<boolean>(false);
+  const [regName, setRegName] = useState<string>('');
+  const [regEmail, setRegEmail] = useState<string>('');
+  const [regPassword, setRegPassword] = useState<string>('');
+  const [regRole, setRegRole] = useState<'PATIENT' | 'DOCTOR' | 'ADMIN'>('PATIENT');
+  const [regSpecialization, setRegSpecialization] = useState<string>('General Practice');
+  const [showRegPassword, setShowRegPassword] = useState<boolean>(false);
+  const [isRegistering, setIsRegistering] = useState<boolean>(false);
+  const [regError, setRegError] = useState<string | null>(null);
 
   // Settings Modal & Password Change State
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
@@ -141,34 +155,91 @@ export default function HomePage() {
   };
 
   // Login Handler
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  // Login Handler (Real Backend API Auth with local fallback)
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError(null);
+    setIsLoggingIn(true);
 
-    const user = SEEDED_USERS[loginEmail.trim().toLowerCase()];
-    if (user) {
-      setCurrentUser(user);
-      setIsLoginModalOpen(false);
-      setIsMobileMenuOpen(false);
-      setCurrentView('DASHBOARD');
-      setPatientFilterTab('SCHEDULED');
-      setDoctorFilterTab('DOCTOR_QUEUE');
-      setAdminFilterTab('ADMIN_OVERVIEW');
-    } else {
-      setAuthError('Invalid credentials. Please use one of the quick demo accounts below.');
+    const emailTrimmed = loginEmail.trim();
+    const passwordTrimmed = loginPassword.trim();
+
+    try {
+      // 1. Authenticate with Django REST API database endpoint
+      const userFromAPI = await loginAPI(emailTrimmed, passwordTrimmed);
+      if (userFromAPI) {
+        setCurrentUser(userFromAPI);
+        setIsLoginModalOpen(false);
+        setIsMobileMenuOpen(false);
+        setCurrentView('DASHBOARD');
+        setPatientFilterTab('SCHEDULED');
+        setDoctorFilterTab('DOCTOR_QUEUE');
+        setAdminFilterTab('ADMIN_OVERVIEW');
+        setLoginEmail('');
+        setLoginPassword('');
+        setShowPassword(false);
+        return;
+      }
+    } catch (err: any) {
+      // 2. Fallback check for offline demo users if backend is unreachable
+      const localUser = SEEDED_USERS[emailTrimmed.toLowerCase()];
+      if (localUser && (passwordTrimmed === 'PatientPass123!' || passwordTrimmed === 'DoctorPass123!' || passwordTrimmed === 'AdminPass123!')) {
+        setCurrentUser(localUser);
+        setIsLoginModalOpen(false);
+        setIsMobileMenuOpen(false);
+        setCurrentView('DASHBOARD');
+        setPatientFilterTab('SCHEDULED');
+        setDoctorFilterTab('DOCTOR_QUEUE');
+        setAdminFilterTab('ADMIN_OVERVIEW');
+        setLoginEmail('');
+        setLoginPassword('');
+        setShowPassword(false);
+        return;
+      }
+
+      setAuthError(err.message || 'Invalid email address or password. Please check your credentials.');
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
-  const handleQuickDemoLogin = (email: string) => {
-    const user = SEEDED_USERS[email];
-    if (user) {
-      setCurrentUser(user);
-      setIsLoginModalOpen(false);
-      setIsMobileMenuOpen(false);
-      setCurrentView('DASHBOARD');
-      setPatientFilterTab('SCHEDULED');
-      setDoctorFilterTab('DOCTOR_QUEUE');
-      setAdminFilterTab('ADMIN_OVERVIEW');
+  // Admin Success Message State
+  const [adminSuccessMsg, setAdminSuccessMsg] = useState<string | null>(null);
+
+  // Admin User Creation Handler
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setRegError(null);
+    setAdminSuccessMsg(null);
+    setIsRegistering(true);
+
+    try {
+      const newUser = await registerAPI({
+        email: regEmail.trim(),
+        password: regPassword.trim(),
+        name: regName.trim(),
+        role: regRole,
+        specialization: regRole === 'DOCTOR' ? regSpecialization.trim() : undefined
+      });
+
+      if (newUser) {
+        if (regRole === 'DOCTOR') {
+          const updatedDocs = await fetchDoctorsFromAPI();
+          if (updatedDocs) setDoctorsList(updatedDocs);
+        }
+
+        setAdminSuccessMsg(`Successfully created ${newUser.role} account for ${newUser.name} (${newUser.email}).`);
+        setIsRegisterModalOpen(false);
+        setRegEmail('');
+        setRegPassword('');
+        setRegName('');
+        setRegRole('PATIENT');
+        setShowRegPassword(false);
+      }
+    } catch (err: any) {
+      setRegError(err.message || 'Failed to create account.');
+    } finally {
+      setIsRegistering(false);
     }
   };
 
@@ -517,7 +588,19 @@ export default function HomePage() {
                 <Calendar size={16} /> Set Time-Off
               </button>
             )}
+
+            {currentUser.role === 'ADMIN' && (
+              <button type="button" className="btn-primary" onClick={() => { setRegError(null); setIsRegisterModalOpen(true); }}>
+                <PlusCircle size={16} /> Add New User to DB
+              </button>
+            )}
           </div>
+
+          {adminSuccessMsg && (
+            <div style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', color: '#065f46', padding: '0.75rem 1rem', borderRadius: '12px', fontSize: '0.85rem', marginBottom: '1rem', fontWeight: 600 }}>
+              {adminSuccessMsg}
+            </div>
+          )}
 
           {/* PATIENT ACTION BUTTON TABS (3 EQUAL COLUMNS SIDE-BY-SIDE ON MOBILE) */}
           {currentUser.role === 'PATIENT' && (
@@ -1400,6 +1483,7 @@ export default function HomePage() {
                 <input 
                   type="email" 
                   className="form-input"
+                  placeholder="e.g. john@patient.com"
                   value={loginEmail} 
                   onChange={(e) => setLoginEmail(e.target.value)} 
                   required 
@@ -1408,59 +1492,168 @@ export default function HomePage() {
 
               <div style={{ marginBottom: '1.1rem' }}>
                 <label className="form-label">Password</label>
-                <input 
-                  type="password" 
-                  className="form-input"
-                  value={loginPassword} 
-                  onChange={(e) => setLoginPassword(e.target.value)} 
-                  required 
-                />
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <input 
+                    type={showPassword ? 'text' : 'password'} 
+                    className="form-input"
+                    style={{ paddingRight: '2.5rem' }}
+                    placeholder="Enter your password"
+                    value={loginPassword} 
+                    onChange={(e) => setLoginPassword(e.target.value)} 
+                    required 
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{
+                      position: 'absolute',
+                      right: '0.75rem',
+                      background: 'none',
+                      border: 'none',
+                      color: '#64748b',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '0.2rem'
+                    }}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
 
-              <button type="submit" className="btn-primary" style={{ width: '100%', borderRadius: '10px', fontSize: '0.85rem' }}>
-                Sign In
+              <button type="submit" className="btn-primary" disabled={isLoggingIn} style={{ width: '100%', borderRadius: '10px', fontSize: '0.85rem', opacity: isLoggingIn ? 0.7 : 1 }}>
+                {isLoggingIn ? 'Signing In...' : 'Sign In'}
               </button>
             </form>
-
-            <div style={{ marginTop: '1.25rem', borderTop: '1px solid #f1f5f9', paddingTop: '0.85rem' }}>
-              <p style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: '0.5rem', textAlign: 'center' }}>
-                Quick Demo Accounts (1-Click Login)
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                <button 
-                  type="button"
-                  className="btn-sm-outline"
-                  style={{ textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.78rem' }}
-                  onClick={() => handleQuickDemoLogin('john@patient.com')}
-                >
-                  <span>Patient: john@patient.com</span>
-                  <span className="role-badge role-patient">Patient</span>
-                </button>
-                <button 
-                  type="button"
-                  className="btn-sm-outline"
-                  style={{ textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.78rem' }}
-                  onClick={() => handleQuickDemoLogin('dr.alice@clinic.com')}
-                >
-                  <span>Doctor: dr.alice@clinic.com</span>
-                  <span className="role-badge role-doctor">Doctor</span>
-                </button>
-                <button 
-                  type="button"
-                  className="btn-sm-outline"
-                  style={{ textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.78rem' }}
-                  onClick={() => handleQuickDemoLogin('admin@appointmentguard.com')}
-                >
-                  <span>Admin: admin@appointmentguard.com</span>
-                  <span className="role-badge role-admin">Admin</span>
-                </button>
-              </div>
-            </div>
 
             <button 
               type="button"
               style={{ width: '100%', marginTop: '0.85rem', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem' }}
               onClick={() => setIsLoginModalOpen(false)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ADMIN-ONLY USER CREATION MODAL */}
+      {isRegisterModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '450px' }}>
+            <div style={{ marginBottom: '1.1rem', textAlign: 'center' }}>
+              <div className="brand-icon" style={{ margin: '0 auto 0.65rem' }}>
+                <PlusCircle size={18} />
+              </div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a' }}>Add User to Clinic Database</h3>
+              <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.2rem' }}>Admin Panel — Register a new Patient, Doctor, or Admin.</p>
+            </div>
+
+            {regError && (
+              <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b', padding: '0.6rem 0.75rem', borderRadius: '10px', fontSize: '0.8rem', marginBottom: '0.85rem' }}>
+                {regError}
+              </div>
+            )}
+
+            <form onSubmit={handleRegisterSubmit}>
+              <div style={{ marginBottom: '0.85rem' }}>
+                <label className="form-label">Full Name</label>
+                <input 
+                  type="text" 
+                  className="form-input"
+                  placeholder="e.g. Mary Jane"
+                  value={regName} 
+                  onChange={(e) => setRegName(e.target.value)} 
+                  required 
+                />
+              </div>
+
+              <div style={{ marginBottom: '0.85rem' }}>
+                <label className="form-label">Email Address</label>
+                <input 
+                  type="email" 
+                  className="form-input"
+                  placeholder="e.g. mary@patient.com"
+                  value={regEmail} 
+                  onChange={(e) => setRegEmail(e.target.value)} 
+                  required 
+                />
+              </div>
+
+              <div style={{ marginBottom: '0.85rem' }}>
+                <label className="form-label">Account Role</label>
+                <select 
+                  className="form-input"
+                  value={regRole}
+                  onChange={(e) => setRegRole(e.target.value as any)}
+                  required
+                >
+                  <option value="PATIENT">Patient</option>
+                  <option value="DOCTOR">Doctor</option>
+                  <option value="ADMIN">System Admin</option>
+                </select>
+              </div>
+
+              {regRole === 'DOCTOR' && (
+                <div style={{ marginBottom: '0.85rem' }}>
+                  <label className="form-label">Doctor Specialization</label>
+                  <input 
+                    type="text" 
+                    className="form-input"
+                    placeholder="e.g. Pediatrics, Cardiology"
+                    value={regSpecialization} 
+                    onChange={(e) => setRegSpecialization(e.target.value)} 
+                    required 
+                  />
+                </div>
+              )}
+
+              <div style={{ marginBottom: '1.1rem' }}>
+                <label className="form-label">Password</label>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <input 
+                    type={showRegPassword ? 'text' : 'password'} 
+                    className="form-input"
+                    style={{ paddingRight: '2.5rem' }}
+                    placeholder="At least 6 characters"
+                    value={regPassword} 
+                    onChange={(e) => setRegPassword(e.target.value)} 
+                    required 
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowRegPassword(!showRegPassword)}
+                    style={{
+                      position: 'absolute',
+                      right: '0.75rem',
+                      background: 'none',
+                      border: 'none',
+                      color: '#64748b',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '0.2rem'
+                    }}
+                    aria-label={showRegPassword ? "Hide password" : "Show password"}
+                  >
+                    {showRegPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+
+              <button type="submit" className="btn-primary" disabled={isRegistering} style={{ width: '100%', borderRadius: '10px', fontSize: '0.85rem', opacity: isRegistering ? 0.7 : 1 }}>
+                {isRegistering ? 'Adding User...' : 'Add User to DB'}
+              </button>
+            </form>
+
+            <button 
+              type="button"
+              style={{ width: '100%', marginTop: '0.85rem', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem' }}
+              onClick={() => setIsRegisterModalOpen(false)}
             >
               Close
             </button>
