@@ -15,7 +15,8 @@ import {
   cancelAppointmentAPI, 
   rescheduleAppointmentAPI, 
   fetchPatientAppointmentsAPI,
-  loginAPI
+  loginAPI,
+  registerAPI
 } from './lib/api';
 
 // Backend Accounts Mapping
