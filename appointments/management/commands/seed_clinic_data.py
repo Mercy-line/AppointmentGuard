@@ -21,10 +21,22 @@ class Command(BaseCommand):
             User.objects.create_superuser('admin', 'admin@appointmentguard.com', 'AdminPass123!', role=UserRole.ADMIN)
             self.stdout.write(self.style.SUCCESS("Created Superuser: admin (pass: AdminPass123!)"))
 
-        # Create sample patient
-        if not User.objects.filter(username='patient_john').exists():
-            p = User.objects.create_user('patient_john', 'john@patient.com', 'PatientPass123!', role=UserRole.PATIENT, first_name='John', last_name='Doe')
-            self.stdout.write(self.style.SUCCESS(f"Created Patient: {p.username} (pass: PatientPass123!)"))
+        # Create or update sample patient
+        patient_user, _ = User.objects.get_or_create(
+            email='john@patient.com',
+            defaults={
+                'username': 'patient_john',
+                'first_name': 'John',
+                'last_name': 'Doe',
+                'role': UserRole.PATIENT,
+            }
+        )
+        patient_user.first_name = 'John'
+        patient_user.last_name = 'Doe'
+        patient_user.role = UserRole.PATIENT
+        patient_user.set_password('PatientPass123!')
+        patient_user.save()
+        self.stdout.write(self.style.SUCCESS(f"Seeded Patient: {patient_user.email} (pass: PatientPass123!)"))
 
         # 5 Official Doctors Data
         doctors_data = [
