@@ -252,6 +252,10 @@ AppointmentGuard uses a decoupled layered architecture separating domain entitie
 
 > ### 🚀 Live Production Deployment & CI/CD Summary
 > * **Public Live Application URL**: [https://appointmentguard.onrender.com](https://appointmentguard.onrender.com) *(REST API: `https://appointmentguard.onrender.com/api/doctors/`)*
+> 
+> > [!NOTE]
+> > **Cold Start / Initial Load Notice**: The live application is hosted on a Render free-tier cloud instance. If the application has been idle, **it may take 50 to 90 seconds for the container to spin up and process the initial request**. Please be patient on the first visit — subsequent page loads and REST API requests respond instantaneously!
+> 
 > * **Deployment Trigger Branch & Mechanism**: Pushes targeting the **`production`** branch trigger automated continuous deployment via GitHub Actions ([`.github/workflows/cd.yml`](.github/workflows/cd.yml)). Upon successful regression testing and container security verification, GitHub Actions dispatches an HTTP POST request to the Render deploy hook (`RENDER_DEPLOY_HOOK_URL`), automatically building and deploying the live production web service and managed PostgreSQL database without downtime.
 > * **Pipeline Description**:
 >   * **CI Pipeline ([`.github/workflows/ci.yml`](.github/workflows/ci.yml))**: Runs on `develop`, `production`, and `main` branch pull requests. Spins up an isolated PostgreSQL 16 container, lints code with `flake8`, and runs the full 20-test `pytest` suite.
