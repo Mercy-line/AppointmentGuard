@@ -5,7 +5,7 @@ import {
   Stethoscope, Calendar, Clock, User as UserIcon, CheckCircle2, Shield,
   Activity, Heart, Baby, Syringe, TestTube, RefreshCw, LogOut, Lock, 
   AlertTriangle, AlertCircle, PlusCircle, Settings, Key, Check, Users, FileText,
-  Menu, X, ChevronDown, ChevronUp, Eye, EyeOff
+  Menu, X, ChevronDown, ChevronUp, Eye, EyeOff, Search
 } from 'lucide-react';
 import type { User, Doctor, TimeSlot, Appointment, DoctorTimeOff } from './types';
 import { 
@@ -16,7 +16,8 @@ import {
   rescheduleAppointmentAPI, 
   fetchPatientAppointmentsAPI,
   loginAPI,
-  registerAPI
+  registerAPI,
+  fetchPatientsListAPI
 } from './lib/api';
 
 // Backend Accounts Mapping
@@ -57,8 +58,12 @@ export default function HomePage() {
   // Doctor Filter Tab: 'DOCTOR_QUEUE' | 'DOCTOR_CANCELLED'
   const [doctorFilterTab, setDoctorFilterTab] = useState<'DOCTOR_QUEUE' | 'DOCTOR_CANCELLED'>('DOCTOR_QUEUE');
 
-  // Admin Main Filter Tab: 'ADMIN_OVERVIEW' | 'ADMIN_DOCTORS' | 'ADMIN_APPOINTMENTS'
-  const [adminFilterTab, setAdminFilterTab] = useState<'ADMIN_OVERVIEW' | 'ADMIN_DOCTORS' | 'ADMIN_APPOINTMENTS'>('ADMIN_OVERVIEW');
+  // Admin Main Filter Tab: 'ADMIN_OVERVIEW' | 'ADMIN_DOCTORS' | 'ADMIN_PATIENTS' | 'ADMIN_APPOINTMENTS'
+  const [adminFilterTab, setAdminFilterTab] = useState<'ADMIN_OVERVIEW' | 'ADMIN_DOCTORS' | 'ADMIN_PATIENTS' | 'ADMIN_APPOINTMENTS'>('ADMIN_OVERVIEW');
+
+  // Admin Patients Directory State
+  const [patientsList, setPatientsList] = useState<any[]>([]);
+  const [patientSearchQuery, setPatientSearchQuery] = useState<string>('');
 
   // Admin Selected Doctor Tab State
   const [selectedAdminDoctorId, setSelectedAdminDoctorId] = useState<string>('');
@@ -134,13 +139,22 @@ export default function HomePage() {
     loadDoctorsFromBackend();
   }, []);
 
-  // Fetch appointments for logged-in user from Django API
+  // Fetch patient appointments & patients list for logged-in user from Django API
   useEffect(() => {
     async function loadPatientAppts() {
       if (currentUser && currentUser.role === 'PATIENT') {
         const apiAppts = await fetchPatientAppointmentsAPI(currentUser.id);
         if (apiAppts && Array.isArray(apiAppts)) {
           setAppointments(apiAppts);
+        }
+      }
+      if (currentUser && currentUser.role === 'ADMIN') {
+        const apiPatients = await fetchPatientsListAPI();
+        if (apiPatients && Array.isArray(apiPatients) && apiPatients.length > 0) {
+          setPatientsList(apiPatients);
+        } else {
+          // Default seeded patient fallback
+          setPatientsList([{ id: 'P101', name: 'John Doe', email: 'john@patient.com', username: 'patient_john', date_joined: 'Seeded' }]);
         }
       }
     }
@@ -227,6 +241,14 @@ export default function HomePage() {
         if (regRole === 'DOCTOR') {
           const updatedDocs = await fetchDoctorsFromAPI();
           if (updatedDocs) setDoctorsList(updatedDocs);
+        }
+        if (regRole === 'PATIENT') {
+          const updatedPatients = await fetchPatientsListAPI();
+          if (updatedPatients && Array.isArray(updatedPatients)) {
+            setPatientsList(updatedPatients);
+          } else {
+            setPatientsList(prev => [{ id: newUser.id, name: newUser.name, email: newUser.email, username: newUser.username, date_joined: 'Just now' }, ...prev]);
+          }
         }
 
         setAdminSuccessMsg(`Successfully created ${newUser.role} account for ${newUser.name} (${newUser.email}).`);
@@ -744,7 +766,22 @@ export default function HomePage() {
                 <span className="tab-label-mobile">Doctors</span>
               </button>
 
-              {/* 3. MASTER LOG */}
+              {/* 3. PATIENTS DIRECTORY */}
+              <button
+                type="button"
+                className={`dashboard-tab-btn ${adminFilterTab === 'ADMIN_PATIENTS' ? 'btn-primary' : 'btn-outline'}`}
+                style={{ 
+                  background: adminFilterTab === 'ADMIN_PATIENTS' ? '#0284c7' : 'white',
+                  color: adminFilterTab === 'ADMIN_PATIENTS' ? 'white' : '#1e293b'
+                }}
+                onClick={() => setAdminFilterTab('ADMIN_PATIENTS')}
+              >
+                <UserIcon size={14} /> 
+                <span className="tab-label-desktop">Registered Patients</span>
+                <span className="tab-label-mobile">Patients</span>
+              </button>
+
+              {/* 4. MASTER LOG */}
               <button
                 type="button"
                 className={`dashboard-tab-btn ${adminFilterTab === 'ADMIN_APPOINTMENTS' ? 'btn-primary' : 'btn-outline'}`}

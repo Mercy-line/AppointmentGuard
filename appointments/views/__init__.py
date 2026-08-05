@@ -14,6 +14,7 @@ from .api import (
     PatientUpcomingAppointmentsAPIView,
     LoginAPIView,
     RegisterAPIView,
+    PatientListAPIView,
 )
 
 __all__ = [
@@ -30,4 +31,5 @@ __all__ = [
     'PatientUpcomingAppointmentsAPIView',
     'LoginAPIView',
     'RegisterAPIView',
+    'PatientListAPIView',
 ]

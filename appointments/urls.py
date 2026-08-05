@@ -12,7 +12,8 @@ from .views import (
     RescheduleAppointmentAPIView,
     PatientUpcomingAppointmentsAPIView,
     LoginAPIView,
-    RegisterAPIView
+    RegisterAPIView,
+    PatientListAPIView
 )
 
 app_name = 'appointments'
@@ -36,6 +37,7 @@ urlpatterns = [
     # API Auth Routes
     path('api/auth/login/', LoginAPIView.as_view(), name='api-login'),
     path('api/auth/register/', RegisterAPIView.as_view(), name='api-register'),
+    path('api/patients/list/', PatientListAPIView.as_view(), name='api-patient-list'),
 
     # API Alias Routes with /api/ prefix
     path('api/doctors/', DoctorListAPIView.as_view(), name='api-doctor-list'),

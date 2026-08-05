@@ -118,3 +118,14 @@ export async function registerAPI(data: { email: string; password: string; name:
   }
   return await res.json();
 }
+
+export async function fetchPatientsListAPI() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/patients/list/`, { cache: 'no-store' });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (error) {
+    console.warn('Backend API fetch patients list:', error);
+    return null;
+  }
+}

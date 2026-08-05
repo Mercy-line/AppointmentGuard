@@ -123,6 +123,24 @@ class RegisterAPIView(APIView):
         }, status=status.HTTP_201_CREATED)
 
 
+class PatientListAPIView(APIView):
+    """
+    GET /api/patients/ — Returns a list of all registered patients in the clinic database.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        patients = CustomUser.objects.filter(role='PATIENT').order_by('-date_joined')
+        data = [{
+            'id': str(p.id),
+            'name': p.get_full_name() or p.username,
+            'email': p.email,
+            'username': p.username,
+            'date_joined': p.date_joined.strftime('%Y-%m-%d %H:%M') if p.date_joined else 'N/A'
+        } for p in patients]
+        return Response(data, status=status.HTTP_200_OK)
+
+
 class DoctorListAPIView(APIView):
     """
     GET /api/doctors/ — Returns a list of active doctors in the clinic.

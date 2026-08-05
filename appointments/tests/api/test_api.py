@@ -100,3 +100,11 @@ class TestRESTAPIEndpoints:
         assert response.status_code == status.HTTP_201_CREATED
         assert response.data['email'] == 'sarah@clinic.com'
         assert response.data['role'] == 'PATIENT'
+
+    def test_patient_list_api(self, setup_api_data):
+        client, patient, _, _, _ = setup_api_data
+        url = reverse('appointments:api-patient-list')
+        response = client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+        assert isinstance(response.data, list)
+        assert len(response.data) >= 1

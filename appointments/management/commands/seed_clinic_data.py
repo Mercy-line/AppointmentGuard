@@ -70,4 +70,4 @@ class Command(BaseCommand):
 
             self.stdout.write(self.style.SUCCESS(f"Seeded Doctor: Dr. {first_name} {last_name} ({spec})"))
 
-        self.stdout.write(self.style.SUCCESS("🎉 Clinic data seeding completed successfully!"))
+        self.stdout.write(self.style.SUCCESS(" Clinic data seeding completed successfully!"))
