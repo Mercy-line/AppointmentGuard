@@ -66,61 +66,64 @@ class RegisterAPIView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        email = request.data.get('email', '').strip()
-        password = request.data.get('password', '').strip()
-        name = request.data.get('name', '').strip()
-        role = request.data.get('role', 'PATIENT').strip().upper()
-        specialization = request.data.get('specialization', 'General Practice').strip()
+        try:
+            email = request.data.get('email', '').strip()
+            password = request.data.get('password', '').strip()
+            name = request.data.get('name', '').strip()
+            role = request.data.get('role', 'PATIENT').strip().upper()
+            specialization = request.data.get('specialization', 'General Practice').strip()
 
-        if not email or not password or not name:
-            return Response({'error': 'Full name, email address, and password are required.'}, status=status.HTTP_400_BAD_REQUEST)
+            if not email or not password or not name:
+                return Response({'error': 'Full name, email address, and password are required.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        if len(password) < 6:
-            return Response({'error': 'Password must be at least 6 characters long.'}, status=status.HTTP_400_BAD_REQUEST)
+            if len(password) < 6:
+                return Response({'error': 'Password must be at least 6 characters long.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        if role not in ['PATIENT', 'DOCTOR', 'ADMIN']:
-            return Response({'error': 'Invalid role specified.'}, status=status.HTTP_400_BAD_REQUEST)
+            if role not in ['PATIENT', 'DOCTOR', 'ADMIN']:
+                return Response({'error': 'Invalid role specified.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        if CustomUser.objects.filter(email__iexact=email).exists():
-            return Response({'error': 'An account with this email address already exists.'}, status=status.HTTP_400_BAD_REQUEST)
+            if CustomUser.objects.filter(email__iexact=email).exists():
+                return Response({'error': 'An account with this email address already exists.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Generate a unique username from email
-        base_username = email.split('@')[0].replace('.', '_')
-        username = base_username
-        counter = 1
-        while CustomUser.objects.filter(username=username).exists():
-            username = f"{base_username}_{counter}"
-            counter += 1
+            # Generate a unique username from email
+            base_username = email.split('@')[0].replace('.', '_')
+            username = base_username
+            counter = 1
+            while CustomUser.objects.filter(username=username).exists():
+                username = f"{base_username}_{counter}"
+                counter += 1
 
-        name_parts = name.split(' ', 1)
-        first_name = name_parts[0]
-        last_name = name_parts[1] if len(name_parts) > 1 else ''
+            name_parts = name.split(' ', 1)
+            first_name = name_parts[0]
+            last_name = name_parts[1] if len(name_parts) > 1 else ''
 
-        user = CustomUser.objects.create_user(
-            username=username,
-            email=email,
-            password=password,
-            first_name=first_name,
-            last_name=last_name,
-            role=role
-        )
-
-        if role == 'DOCTOR':
-            Doctor.objects.get_or_create(
-                user=user,
-                defaults={'specialization': specialization, 'slot_duration_minutes': 30, 'is_active': True}
+            user = CustomUser.objects.create_user(
+                username=username,
+                email=email,
+                password=password,
+                first_name=first_name,
+                last_name=last_name,
+                role=role
             )
 
-        full_name = user.get_full_name() or user.username
+            if role == 'DOCTOR':
+                Doctor.objects.get_or_create(
+                    user=user,
+                    defaults={'specialization': specialization, 'slot_duration_minutes': 30, 'is_active': True}
+                )
 
-        return Response({
-            'id': str(user.id),
-            'email': user.email,
-            'username': user.username,
-            'name': full_name,
-            'role': user.role,
-            'specialization': specialization if role == 'DOCTOR' else None
-        }, status=status.HTTP_201_CREATED)
+            full_name = user.get_full_name() or user.username
+
+            return Response({
+                'id': str(user.id),
+                'email': user.email,
+                'username': user.username,
+                'name': full_name,
+                'role': user.role,
+                'specialization': specialization if role == 'DOCTOR' else None
+            }, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({'error': f'Registration failed: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class PatientListAPIView(APIView):
@@ -143,12 +146,20 @@ class PatientListAPIView(APIView):
 
 class DoctorListAPIView(APIView):
     """
-    GET /api/doctors/ — Returns a list of active doctors in the clinic.
+    GET /api/doctors/ — Returns a list of active doctors in the clinic. Auto-seeds if database is empty.
     """
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
         doctors = Doctor.objects.filter(is_active=True)
+        if not doctors.exists():
+            from django.core.management import call_command
+            try:
+                call_command('seed_clinic_data')
+                doctors = Doctor.objects.filter(is_active=True)
+            except Exception:
+                pass
+
         serializer = DoctorSerializer(doctors, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 

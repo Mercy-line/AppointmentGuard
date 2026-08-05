@@ -122,17 +122,27 @@ export default function HomePage() {
   const [timeOffEnd, setTimeOffEnd] = useState<string>('2026-08-05T17:00');
   const [timeOffReason, setTimeOffReason] = useState<string>('Personal Leave');
 
+const DEFAULT_DOCTORS: Doctor[] = [
+  { id: '1', name: 'Dr. Alice Cherop', email: 'dr.alice@clinic.com', specialization: 'Cardiology', hours: 'Mon–Fri, 9:00 AM – 5:00 PM', avatarInitials: 'AC', slotDurationMinutes: 30 },
+  { id: '2', name: 'Dr. John Kimani', email: 'dr.john@clinic.com', specialization: 'General Practice', hours: 'Mon–Fri, 9:00 AM – 5:00 PM', avatarInitials: 'JK', slotDurationMinutes: 30 },
+  { id: '3', name: 'Dr. Charlie Onyancha', email: 'dr.charlie@clinic.com', specialization: 'Pediatrics', hours: 'Mon–Fri, 9:00 AM – 5:00 PM', avatarInitials: 'CO', slotDurationMinutes: 30 },
+  { id: '4', name: 'Dr. Diana Atieno', email: 'dr.diana@clinic.com', specialization: 'Dermatology', hours: 'Mon–Fri, 9:00 AM – 5:00 PM', avatarInitials: 'DA', slotDurationMinutes: 30 },
+  { id: '5', name: 'Dr. Evans Muyoma', email: 'dr.evans@clinic.com', specialization: 'Orthopedics', hours: 'Mon–Fri, 9:00 AM – 5:00 PM', avatarInitials: 'EM', slotDurationMinutes: 30 },
+];
+
   // Fetch real doctors from Django REST API on mount
   useEffect(() => {
     async function loadDoctorsFromBackend() {
       setIsLoadingDoctors(true);
       const data = await fetchDoctorsFromAPI();
-      if (data && Array.isArray(data)) {
+      if (data && Array.isArray(data) && data.length > 0) {
         setDoctorsList(data);
-        if (data.length > 0) {
-          setSelectedDoctorId(data[0].id);
-          setSelectedAdminDoctorId(data[0].id);
-        }
+        setSelectedDoctorId(data[0].id);
+        setSelectedAdminDoctorId(data[0].id);
+      } else {
+        setDoctorsList(DEFAULT_DOCTORS);
+        setSelectedDoctorId(DEFAULT_DOCTORS[0].id);
+        setSelectedAdminDoctorId(DEFAULT_DOCTORS[0].id);
       }
       setIsLoadingDoctors(false);
     }
