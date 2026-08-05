@@ -250,7 +250,12 @@ AppointmentGuard uses a decoupled layered architecture separating domain entitie
 
 ## 7. Deployment, Containerization & CI/CD Architecture
 
-AppointmentGuard employs a strict GitOps workflow with automated GitHub Actions CI/CD pipelines and production containerization:
+> ### 🚀 Live Production Deployment & CI/CD Summary
+> * **Public Live Application URL**: [https://appointmentguard.onrender.com](https://appointmentguard.onrender.com) *(REST API: `https://appointmentguard.onrender.com/api/doctors/`)*
+> * **Deployment Trigger Branch & Mechanism**: Pushes targeting the **`production`** branch trigger automated continuous deployment via GitHub Actions ([`.github/workflows/cd.yml`](.github/workflows/cd.yml)). Upon successful regression testing and container security verification, GitHub Actions dispatches an HTTP POST request to the Render deploy hook (`RENDER_DEPLOY_HOOK_URL`), automatically building and deploying the live production web service and managed PostgreSQL database without downtime.
+> * **Pipeline Description**:
+>   * **CI Pipeline ([`.github/workflows/ci.yml`](.github/workflows/ci.yml))**: Runs on `develop` branch pushes and pull requests. Spins up an isolated PostgreSQL 16 container, lints code with `flake8`, and runs the full 20-test `pytest` suite.
+>   * **CD Pipeline ([`.github/workflows/cd.yml`](.github/workflows/cd.yml))**: Runs on `production` branch pushes. Executes pre-deployment regression tests, builds the Docker container image, verifies non-root user execution (`UID 10001`), and dispatches the deploy webhook to publish live updates on Render.
 
 ### A. Continuous Integration (CI Pipeline — `.github/workflows/ci.yml`)
 * **Trigger**: Triggered automatically on all pushes and pull requests targeting the `develop` branch.
