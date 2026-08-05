@@ -5,7 +5,7 @@ import {
   Stethoscope, Calendar, Clock, User as UserIcon, CheckCircle2, Shield,
   Activity, Heart, Baby, Syringe, TestTube, RefreshCw, LogOut, Lock, 
   AlertTriangle, AlertCircle, PlusCircle, Settings, Key, Check, Users, FileText,
-  Menu, X, ChevronDown, ChevronUp, Eye, EyeOff, Search
+  Menu, X, ChevronDown, ChevronUp, Eye, EyeOff, Search, Globe
 } from 'lucide-react';
 import type { User, Doctor, TimeSlot, Appointment, DoctorTimeOff } from './types';
 import { 
@@ -96,8 +96,35 @@ export default function HomePage() {
   const [passwordChangeSuccess, setPasswordChangeSuccess] = useState<string | null>(null);
   const [passwordChangeError, setPasswordChangeError] = useState<string | null>(null);
 
-  // Booking & Appointments State
-  const getTodayDateStr = () => new Date().toISOString().split('T')[0];
+  // Dynamic User Local Timezone Detection (EAT, UTC, EST, etc.)
+  const getUserTimezoneBadge = () => {
+    try {
+      const timeZoneName = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const offsetMinutes = -new Date().getTimezoneOffset();
+      const hours = Math.floor(Math.abs(offsetMinutes) / 60);
+      const mins = Math.abs(offsetMinutes) % 60;
+      const sign = offsetMinutes >= 0 ? '+' : '-';
+      const formattedOffset = `UTC${sign}${hours}${mins > 0 ? `:${mins}` : ''}`;
+
+      let shortName = timeZoneName.split('/')[1]?.replace(/_/g, ' ') || 'Local';
+      if (timeZoneName === 'Africa/Nairobi') shortName = 'EAT';
+      if (timeZoneName === 'UTC' || offsetMinutes === 0) shortName = 'UTC';
+
+      return { zoneName: shortName, offsetStr: formattedOffset };
+    } catch {
+      return { zoneName: 'EAT', offsetStr: 'UTC+3' };
+    }
+  };
+  const userTz = getUserTimezoneBadge();
+
+  // Booking & Appointments State (Local Timezone Date Calculation)
+  const getTodayDateStr = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
   const [selectedDoctorId, setSelectedDoctorId] = useState<string>('');
   const [selectedDate, setSelectedDate] = useState<string>(getTodayDateStr());
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
@@ -535,6 +562,21 @@ const DEFAULT_DOCTORS: Doctor[] = [
               <div className="user-pill">
                 <span>{currentUser.name}</span>
                 <span className={`role-badge role-${currentUser.role.toLowerCase()}`}>{currentUser.role}</span>
+                <span style={{ 
+                  display: 'inline-flex', 
+                  alignItems: 'center', 
+                  gap: '0.25rem', 
+                  background: '#f0f9ff', 
+                  color: '#0369a1', 
+                  border: '1px solid #bae6fd', 
+                  padding: '0.2rem 0.55rem', 
+                  borderRadius: '12px', 
+                  fontSize: '0.72rem', 
+                  fontWeight: 700 
+                }}>
+                  <Globe size={11} color="#0284c7" />
+                  {userTz.zoneName} ({userTz.offsetStr})
+                </span>
               </div>
 
               {/* SETTINGS GEAR ICON BUTTON */}
@@ -580,9 +622,25 @@ const DEFAULT_DOCTORS: Doctor[] = [
         <div className="mobile-menu-drawer">
           {currentUser ? (
             <>
-              <div className="mobile-nav-link" style={{ background: '#e0f2fe', borderColor: '#bae6fd', color: '#0369a1', fontWeight: 700 }}>
-                <span>{currentUser.name}</span>
-                <span className={`role-badge role-${currentUser.role.toLowerCase()}`}>{currentUser.role}</span>
+              <div className="mobile-nav-link" style={{ background: '#e0f2fe', borderColor: '#bae6fd', color: '#0369a1', fontWeight: 700, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <span>{currentUser.name}</span>
+                  <span className={`role-badge role-${currentUser.role.toLowerCase()}`}>{currentUser.role}</span>
+                </div>
+                <span style={{ 
+                  display: 'inline-flex', 
+                  alignItems: 'center', 
+                  gap: '0.2rem', 
+                  background: 'white', 
+                  color: '#0369a1', 
+                  padding: '0.15rem 0.45rem', 
+                  borderRadius: '10px', 
+                  fontSize: '0.72rem', 
+                  fontWeight: 700 
+                }}>
+                  <Globe size={11} color="#0284c7" />
+                  {userTz.zoneName} ({userTz.offsetStr})
+                </span>
               </div>
 
               <button 
