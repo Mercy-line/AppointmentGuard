@@ -2,6 +2,9 @@
 
 import React from 'react';
 import { Calendar, PlusCircle } from 'lucide-react';
+import { PatientDashboard } from './PatientDashboard';
+import { DoctorDashboard } from './DoctorDashboard';
+import { AdminDashboard } from './AdminDashboard';
 import type { AppContextType } from '../hooks/useAppContext';
 
 export const DashboardView: React.FC<{ ctx: AppContextType }> = ({ ctx }) => {
@@ -31,6 +34,10 @@ export const DashboardView: React.FC<{ ctx: AppContextType }> = ({ ctx }) => {
           </button>
         )}
       </div>
+
+      {currentUser.role === 'PATIENT' && <PatientDashboard ctx={ctx} />}
+      {currentUser.role === 'DOCTOR' && <DoctorDashboard ctx={ctx} />}
+      {currentUser.role === 'ADMIN' && <AdminDashboard ctx={ctx} />}
     </div>
   );
 };

@@ -8,6 +8,13 @@ export const LoginModal: React.FC<{ ctx: AppContextType }> = ({ ctx }) => {
   const { auth, modals } = ctx;
   if (!modals.isLoginOpen) return null;
 
+  const onSubmit = async (e: React.FormEvent) => {
+    const success = await auth.handleLoginSubmit(e);
+    if (success) {
+      modals.setIsLoginOpen(false);
+    }
+  };
+
   return (
     <div className="modal-overlay">
       <div className="modal-content">
@@ -19,7 +26,7 @@ export const LoginModal: React.FC<{ ctx: AppContextType }> = ({ ctx }) => {
         {auth.authError && (
           <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b', padding: '0.6rem 0.75rem', borderRadius: '10px', fontSize: '0.8rem', marginBottom: '0.85rem' }}>{auth.authError}</div>
         )}
-        <form onSubmit={auth.handleLoginSubmit}>
+        <form onSubmit={onSubmit}>
           <div style={{ marginBottom: '0.85rem' }}>
             <label className="form-label">Email Address</label>
             <input type="email" className="form-input" placeholder="e.g. john@patient.com" value={auth.loginEmail} onChange={e => auth.setLoginEmail(e.target.value)} required />
