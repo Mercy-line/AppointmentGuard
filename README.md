@@ -21,7 +21,7 @@
    - [Decision 10: Atomic Rescheduling & Rollback Protection](#decision-10-atomic-rescheduling--rollback-protection)
 5. [Enforced Business Rules & Constraints](#5-enforced-business-rules--constraints)
 6. [API Architecture & Endpoints](#6-api-architecture--endpoints)
-7. [Deployment & Containerization Architecture](#7-deployment--containerization-architecture)
+7. [Deployment, Containerization & CI/CD Architecture](#7-deployment-containerization--cicd-architecture)
 8. [How to Run Locally (Local Setup Guide)](#8-how-to-run-locally-local-setup-guide)
 
 ---
@@ -248,14 +248,26 @@ AppointmentGuard uses a decoupled layered architecture separating domain entitie
 
 ---
 
-## 7. Deployment & Containerization Architecture
+## 7. Deployment, Containerization & CI/CD Architecture
 
-* **Containerization**: Multi-stage `Dockerfile` running Django via Gunicorn with static asset collection.
-* **Orchestration**: `docker-compose.yml` linking the web container to a PostgreSQL 15 database service.
-* **CI/CD Pipelines**:
-  * `.github/workflows/ci.yml`: Automated linting and test execution on `develop` branch pushes and pull requests.
-  * `.github/workflows/cd.yml`: Continuous deployment workflow restricted strictly to the `production` branch.
-* **Cloud Infrastructure Blueprint**: Configured `render.yaml` for one-click deployment on Render with managed PostgreSQL.
+AppointmentGuard employs a strict GitOps workflow with automated GitHub Actions CI/CD pipelines and production containerization:
+
+### A. Continuous Integration (CI Pipeline — `.github/workflows/ci.yml`)
+* **Trigger**: Triggered automatically on all pushes and pull requests targeting the `develop` branch.
+* **Database Service**: Spawns an isolated PostgreSQL 16 Alpine container instance in GitHub Actions runner for real integration testing.
+* **Code Linting**: Executes `flake8` syntax, complexity, and import validation.
+* **Test Suite**: Runs the full `pytest` suite against PostgreSQL to enforce scheduling integrity rules before merging code.
+
+### B. Continuous Deployment (CD Pipeline — `.github/workflows/cd.yml`)
+* **Trigger**: Restricted strictly to pushes on the `production` branch.
+* **Pre-Deployment Safety Checks**: Runs full regression tests using `pytest` with fallback secret protection to prevent empty `SECRET_KEY` pipeline failures.
+* **Container Security Audit**: Builds the Docker container image and verifies that the process runs under a secure, non-root user (`appuser`, UID `10001`).
+* **Automated Webhook Deployment**: Triggers the Render cloud deployment webhook (`RENDER_DEPLOY_HOOK_URL`) to build and deploy the production web service and managed PostgreSQL database without downtime.
+
+### C. Docker & Cloud Infrastructure Blueprint
+* **Dockerfile**: Multi-stage, non-root user execution (`UID 10001`), Gunicorn WSGI server with static file collection.
+* **docker-compose.yml**: Local container orchestration linking Django REST API and PostgreSQL 15.
+* **render.yaml**: One-click infrastructure-as-code deployment blueprint for Render cloud platform.
 
 ---
 
