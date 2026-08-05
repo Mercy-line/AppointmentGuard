@@ -7,6 +7,7 @@ export interface User {
   name: string;
   role: UserRole;
   specialization?: string;
+  date_of_birth?: string;
 }
 
 export interface Doctor {
@@ -23,6 +24,7 @@ export interface Doctor {
 export interface TimeSlot {
   time: string;
   available: boolean;
+  rawStartIso?: string;
 }
 
 export interface Appointment {
@@ -34,9 +36,10 @@ export interface Appointment {
   patientName: string;
   date: string;
   time: string;
-  status: 'CONFIRMED' | 'CANCELLED';
+  status: 'BOOKED' | 'CANCELLED' | 'NEEDS_RESCHEDULE' | 'CONFIRMED';
   cancellationReason?: string;
   notificationSent?: boolean;
+  bookedByGuardianName?: string;
 }
 
 export interface DoctorTimeOff {
@@ -46,4 +49,15 @@ export interface DoctorTimeOff {
   startTime: string;
   endTime: string;
   reason: string;
+}
+
+export interface PatientUser {
+  id: string;
+  email: string;
+  username: string;
+  first_name: string;
+  last_name: string;
+  role: string;
+  date_of_birth?: string | null;
+  timezone?: string;
 }

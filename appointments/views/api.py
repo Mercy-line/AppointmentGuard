@@ -133,7 +133,7 @@ class PatientListAPIView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
-        patients = CustomUser.objects.filter(role='PATIENT').order_by('-date_joined')
+        patients = CustomUser.objects.filter(role__iexact='PATIENT').order_by('-date_joined')
         data = [{
             'id': str(p.id),
             'name': p.get_full_name() or p.username,
