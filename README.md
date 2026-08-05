@@ -22,6 +22,7 @@
 5. [Enforced Business Rules & Constraints](#5-enforced-business-rules--constraints)
 6. [API Architecture & Endpoints](#6-api-architecture--endpoints)
 7. [Deployment & Containerization Architecture](#7-deployment--containerization-architecture)
+8. [How to Run Locally (Local Setup Guide)](#8-how-to-run-locally-local-setup-guide)
 
 ---
 
@@ -255,3 +256,84 @@ AppointmentGuard uses a decoupled layered architecture separating domain entitie
   * `.github/workflows/ci.yml`: Automated linting and test execution on `develop` branch pushes and pull requests.
   * `.github/workflows/cd.yml`: Continuous deployment workflow restricted strictly to the `production` branch.
 * **Cloud Infrastructure Blueprint**: Configured `render.yaml` for one-click deployment on Render with managed PostgreSQL.
+
+---
+
+## 8. How to Run Locally (Local Setup Guide)
+
+### Option A: Standard Manual Setup (Backend + Frontend)
+
+#### 1. Prerequisites
+* Python 3.8+ & `pip`
+* Node.js 18+ & `npm`
+* PostgreSQL (Optional; defaults to SQLite for local development)
+
+#### 2. Backend Setup (Django REST Framework API)
+
+```bash
+# 1. Clone the repository & navigate to directory
+git clone https://github.com/Mercy-line/AppointmentGuard.git
+cd AppointmentGuard
+
+# 2. Create & activate Python virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# 3. Install backend dependencies
+pip install -r requirements.txt
+
+# 4. Run database migrations
+python manage.py migrate
+
+# 5. Seed default clinic doctors & working hours
+python manage.py seed_clinic_data
+
+# 6. Run Pytest suite to verify installation
+pytest
+
+# 7. Start the backend Django development server (Port 8000)
+python manage.py runserver 0.0.0.0:8000
+```
+
+#### 3. Frontend Setup (Next.js Dashboard)
+
+Open a second terminal window:
+
+```bash
+# 1. Navigate to the frontend directory
+cd frontend
+
+# 2. Install Node.js dependencies
+npm install
+
+# 3. Start the Next.js development server (Port 3000)
+npm run dev
+```
+
+* **Frontend Dashboard URL**: `http://localhost:3000`
+* **Backend REST API URL**: `http://localhost:8000/api/doctors/`
+
+---
+
+### Option B: Docker & Docker Compose (One-Command Setup)
+
+To run the full production container stack (Django API, Next.js UI, PostgreSQL database) with a single command:
+
+```bash
+# Build and launch all container services
+docker-compose up --build
+```
+
+* **Frontend UI**: `http://localhost:3000`
+* **Backend API**: `http://localhost:8000`
+
+---
+
+### Demo Accounts for Local Testing
+
+| Role | Email / Username | Password | Access / Capabilities |
+| :--- | :--- | :--- | :--- |
+| **Patient** | `john@patient.com` | `PatientPass123!` | Book 30-min slots, view scheduled/cancelled visits |
+| **Doctor** | `dr.alice@clinic.com` | `DoctorPass123!` | View active patient queue, schedule emergency time-offs |
+| **Admin** | `admin@appointmentguard.com` | `AdminPass123!` | View metrics, search patient registry, manage users |
+
