@@ -437,6 +437,13 @@ export default function HomePage() {
   const selectedAdminDoctor = doctorsList.find(d => d.id === selectedAdminDoctorId) || doctorsList[0];
   const selectedDoctorAppointments = selectedAdminDoctor ? appointments.filter(a => a.doctorId === selectedAdminDoctor.id || a.doctorName.includes(selectedAdminDoctor.name)) : [];
 
+  // Registered Patients metric computation
+  const uniquePatientIdentifiers = new Set([
+    ...appointments.map(a => a.patientId || a.patientName),
+    ...Object.values(SEEDED_USERS).filter(u => u.role === 'PATIENT').map(u => u.id)
+  ]);
+  const totalPatientsCount = Math.max(uniquePatientIdentifiers.size, 1);
+
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       
@@ -773,6 +780,15 @@ export default function HomePage() {
                 </div>
                 <h3 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#0f172a' }}>{doctorsList.length}</h3>
                 <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem' }}>Across 5 specialties</p>
+              </div>
+
+              <div style={{ background: 'white', padding: '1.25rem', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#7c3aed', marginBottom: '0.4rem' }}>
+                  <span style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase' }}>Registered Patients</span>
+                  <UserIcon size={20} />
+                </div>
+                <h3 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#0f172a' }}>{totalPatientsCount}</h3>
+                <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem' }}>Patients in clinic DB</p>
               </div>
 
               <div style={{ background: 'white', padding: '1.25rem', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)' }}>
