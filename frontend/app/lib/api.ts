@@ -107,16 +107,29 @@ export async function loginAPI(email: string, password: string) {
 }
 
 export async function registerAPI(data: { email: string; password: string; name: string; role?: string; specialization?: string }) {
-  const res = await fetch(`${API_BASE_URL}/api/auth/register/`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) {
-    const errData = await res.json().catch(() => ({}));
-    throw new Error(errData.error || errData.detail || `Error (${res.status}): Unable to process account registration.`);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/auth/register/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error || errData.detail || `Error (${res.status}): Unable to process account registration.`);
+    }
+    return await res.json();
+  } catch (error: any) {
+    clearTimeout(timeoutId);
+    if (error.name === 'AbortError') {
+      throw new Error('NetworkError: Backend server connection timed out.');
+    }
+    throw error;
   }
-  return await res.json();
 }
 
 export async function fetchPatientsListAPI() {

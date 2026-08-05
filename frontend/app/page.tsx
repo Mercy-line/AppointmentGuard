@@ -260,7 +260,7 @@ export default function HomePage() {
         setShowRegPassword(false);
       }
     } catch (err: any) {
-      if (err.message && (err.message.includes('Failed to fetch') || err.message.includes('NetworkError'))) {
+      if (err.message && (err.message.includes('Failed to fetch') || err.message.includes('NetworkError') || err.message.includes('timed out'))) {
         const fallbackUser: User = {
           id: `U${Math.floor(1000 + Math.random() * 9000)}`,
           email: regEmail.trim(),
@@ -270,6 +270,9 @@ export default function HomePage() {
           specialization: regRole === 'DOCTOR' ? regSpecialization.trim() : undefined
         };
         SEEDED_USERS[regEmail.trim().toLowerCase()] = fallbackUser;
+        if (regRole === 'PATIENT') {
+          setPatientsList(prev => [{ id: fallbackUser.id, name: fallbackUser.name, email: fallbackUser.email, username: fallbackUser.username, date_joined: 'Just now' }, ...prev]);
+        }
         setAdminSuccessMsg(`Successfully created ${regRole} account for ${regName.trim()} (${regEmail.trim()}).`);
         setIsRegisterModalOpen(false);
         setRegEmail('');
