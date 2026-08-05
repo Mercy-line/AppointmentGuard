@@ -166,10 +166,12 @@ AppointmentGuard uses a decoupled layered architecture separating domain entitie
 * **The Problem**: Pre-generating and storing thousands of empty 30-minute slot rows for months in advance creates massive database bloat and requires complex batch update scripts whenever working hours change.
 * **Selected Architecture**: Slots are computed dynamically on demand by `calculate_30_min_slots`. The algorithm generates 30-minute grid intervals bounded by the doctor's `DoctorWorkingHours` for that day, filtering out past times, existing `BOOKED` appointments, and active `DoctorTimeOff` blackout ranges.
 
-### Decision 2: Universal Timezone Standard (UTC)
+### Decision 2: Universal Timezone Standard (UTC) & Dynamic Multi-Timezone UI Selector
 
-* **The Problem**: Clinics operating across different regional timezones (e.g. `Africa/Nairobi`, `UTC`) risk schedule misalignment and Daylight Saving Time shift bugs.
-* **Selected Architecture**: All appointment timestamps (`start_time`, `end_time`, time-offs) are strictly stored and manipulated as aware UTC datetimes in PostgreSQL. Conversion to local user timezones occurs strictly at the presentation layer.
+* **The Problem**: Clinics operating across different regional timezones (e.g. `Africa/Nairobi`, `UTC`, `America/New_York`) risk schedule misalignment, Daylight Saving Time shift bugs, and display errors for international patients.
+* **Selected Architecture**:
+  1. **Backend Database Standard**: All appointment timestamps (`start_time`, `end_time`, time-offs) are strictly stored and manipulated as aware UTC datetimes in PostgreSQL.
+  2. **Dynamic Frontend Timezone Selector**: The UI incorporates automatic browser timezone detection (`Intl.DateTimeFormat`) paired with an interactive Navbar Timezone Dropdown menu (`EAT (UTC+3)`, `UTC`, `EST (UTC-5)`, `PST (UTC-8)`, `GMT`, `CET`, `GST`, `IST`, `JST`). Users can dynamically select their location timezone at any time, instantly re-rendering all available slots and appointment dates in their local timezone.
 
 ### Decision 3: Race Condition Prevention (`select_for_update` vs. Unique Constraints)
 
@@ -220,9 +222,9 @@ AppointmentGuard uses a decoupled layered architecture separating domain entitie
 ## 5. Enforced Business Rules & Constraints
 
 1. **Doctor Activity**: Appointments can only be booked with active doctors (`is_active = True`).
-2. **Working Hours Alignment**: Every slot must fall strictly within the doctor's configured `DoctorWorkingHours` for that day of the week.
+2. **Multi-Timezone & Working Hours Alignment**: Every slot must fall strictly within the doctor's configured `DoctorWorkingHours` for that day of the week. All datetimes are stored in UTC standard and dynamically formatted according to the user's selected timezone (via automatic browser detection or the interactive Navbar timezone dropdown).
 3. **Exact 30-Minute Duration**: All appointments must be exactly 30 minutes long and aligned to 30-minute grid boundaries.
-4. **Advance Notice Guarantee**: Appointments cannot be booked in the past and **must be booked at least 1 hour in advance** of current system time (`start_time >= now + 1 hour`).
+4. **Advance Notice Guarantee & Dynamic Past Slot Disabling**: Appointments cannot be booked in the past (`selectedDate >= today`). On the current date, any time slot starting earlier than **1 hour in advance of current system time** (`start_time < now + 1 hour`) is automatically disabled and styled as unavailable (`opacity 0.45`, `cursor: not-allowed`).
 5. **No Overlapping Bookings**: A slot cannot overlap with any active `BOOKED` appointment for that doctor.
 6. **Time-Off Respect**: Slots overlapping with a `DoctorTimeOff` blackout window cannot be booked.
 7. **Minor Dependent Booking Rule**: Parents/guardians can book appointments on behalf of dependents under 18 years old.
