@@ -71,3 +71,32 @@ class TestRESTAPIEndpoints:
         assert response.status_code == status.HTTP_200_OK
         assert 'available_slots' in response.data
         assert len(response.data['available_slots']) == 16
+
+    def test_login_api_success(self, setup_api_data):
+        client, patient, _, _, _ = setup_api_data
+        url = reverse('appointments:api-login')
+        response = client.post(url, {'email': 'api_p@test.com', 'password': 'Password123!'}, format='json')
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data['email'] == 'api_p@test.com'
+        assert response.data['role'] == 'PATIENT'
+
+    def test_login_api_invalid(self, setup_api_data):
+        client, _, _, _, _ = setup_api_data
+        url = reverse('appointments:api-login')
+        response = client.post(url, {'email': 'api_p@test.com', 'password': 'WrongPassword'}, format='json')
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert 'error' in response.data
+
+    def test_register_api_success(self, setup_api_data):
+        client, _, _, _, _ = setup_api_data
+        url = reverse('appointments:api-register')
+        payload = {
+            'name': 'Sarah Connor',
+            'email': 'sarah@clinic.com',
+            'password': 'NewPassword123!',
+            'role': 'PATIENT'
+        }
+        response = client.post(url, payload, format='json')
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.data['email'] == 'sarah@clinic.com'
+        assert response.data['role'] == 'PATIENT'

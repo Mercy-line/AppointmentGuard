@@ -20,6 +20,109 @@ from ..services import (
 )
 
 
+class LoginAPIView(APIView):
+    """
+    POST /api/auth/login/ — Authenticates a clinic user (Patient, Doctor, Admin) via email & password against database.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        email_or_username = request.data.get('email', '').strip()
+        password = request.data.get('password', '').strip()
+
+        if not email_or_username or not password:
+            return Response({'error': 'Email address and password are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Lookup user by email or username (case-insensitive)
+        user = CustomUser.objects.filter(email__iexact=email_or_username).first()
+        if not user:
+            user = CustomUser.objects.filter(username__iexact=email_or_username).first()
+
+        if user and user.check_password(password):
+            specialization = None
+            if hasattr(user, 'doctor_profile'):
+                specialization = user.doctor_profile.specialization
+
+            full_name = user.get_full_name() or user.username
+            if not full_name.strip():
+                full_name = user.username
+
+            return Response({
+                'id': str(user.id),
+                'email': user.email,
+                'username': user.username,
+                'name': full_name,
+                'role': user.role,
+                'specialization': specialization
+            }, status=status.HTTP_200_OK)
+
+        return Response({'error': 'Invalid email address or password. Please check your credentials.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+class RegisterAPIView(APIView):
+    """
+    POST /api/auth/register/ — Creates a new clinic user (Patient, Doctor, Admin) in the database.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        email = request.data.get('email', '').strip()
+        password = request.data.get('password', '').strip()
+        name = request.data.get('name', '').strip()
+        role = request.data.get('role', 'PATIENT').strip().upper()
+        specialization = request.data.get('specialization', 'General Practice').strip()
+
+        if not email or not password or not name:
+            return Response({'error': 'Full name, email address, and password are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if len(password) < 6:
+            return Response({'error': 'Password must be at least 6 characters long.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if role not in ['PATIENT', 'DOCTOR', 'ADMIN']:
+            return Response({'error': 'Invalid role specified.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if CustomUser.objects.filter(email__iexact=email).exists():
+            return Response({'error': 'An account with this email address already exists.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Generate a unique username from email
+        base_username = email.split('@')[0].replace('.', '_')
+        username = base_username
+        counter = 1
+        while CustomUser.objects.filter(username=username).exists():
+            username = f"{base_username}_{counter}"
+            counter += 1
+
+        name_parts = name.split(' ', 1)
+        first_name = name_parts[0]
+        last_name = name_parts[1] if len(name_parts) > 1 else ''
+
+        user = CustomUser.objects.create_user(
+            username=username,
+            email=email,
+            password=password,
+            first_name=first_name,
+            last_name=last_name,
+            role=role
+        )
+
+        if role == 'DOCTOR':
+            Doctor.objects.get_or_create(
+                user=user,
+                defaults={'specialization': specialization, 'slot_duration_minutes': 30, 'is_active': True}
+            )
+
+        full_name = user.get_full_name() or user.username
+
+        return Response({
+            'id': str(user.id),
+            'email': user.email,
+            'username': user.username,
+            'name': full_name,
+            'role': user.role,
+            'specialization': specialization if role == 'DOCTOR' else None
+        }, status=status.HTTP_201_CREATED)
+
+
 class DoctorListAPIView(APIView):
     """
     GET /api/doctors/ — Returns a list of active doctors in the clinic.
