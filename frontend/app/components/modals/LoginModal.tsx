@@ -39,9 +39,11 @@ export const LoginModal: React.FC<{ ctx: AppContextType }> = ({ ctx }) => {
               </button>
             </div>
           </div>
-          <button type="submit" className="btn-primary" style={{ width: '100%', borderRadius: '10px', fontSize: '0.85rem' }}>Sign In</button>
+          <button type="submit" className="btn-primary" disabled={auth.isLoggingIn} style={{ width: '100%', borderRadius: '10px', fontSize: '0.85rem', opacity: auth.isLoggingIn ? 0.7 : 1, cursor: auth.isLoggingIn ? 'not-allowed' : 'pointer' }}>
+            {auth.isLoggingIn ? 'Signing In...' : 'Sign In'}
+          </button>
         </form>
-        <button type="button" style={{ width: '100%', marginTop: '0.85rem', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem' }} onClick={() => modals.setIsLoginOpen(false)}>Close</button>
+        <button type="button" disabled={auth.isLoggingIn} style={{ width: '100%', marginTop: '0.85rem', background: 'none', border: 'none', color: '#64748b', cursor: auth.isLoggingIn ? 'not-allowed' : 'pointer', fontWeight: 600, fontSize: '0.8rem' }} onClick={() => modals.setIsLoginOpen(false)}>Close</button>
       </div>
     </div>
   );

@@ -10,10 +10,12 @@ export function useAuth(setCurrentView: (view: 'HOME' | 'DASHBOARD') => void) {
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [authError, setAuthError] = useState<string | null>(null);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError(null);
+    setIsLoggingIn(true);
     try {
       const data = await loginAPI(loginEmail, loginPassword);
       setCurrentUser(data.user);
@@ -29,6 +31,8 @@ export function useAuth(setCurrentView: (view: 'HOME' | 'DASHBOARD') => void) {
       }
       setAuthError('Invalid credentials. Try john@patient.com / PatientPass123!');
       return false;
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -39,6 +43,6 @@ export function useAuth(setCurrentView: (view: 'HOME' | 'DASHBOARD') => void) {
 
   return {
     currentUser, setCurrentUser, loginEmail, setLoginEmail, loginPassword, setLoginPassword,
-    authError, setAuthError, handleLoginSubmit, handleLogout
+    authError, setAuthError, isLoggingIn, handleLoginSubmit, handleLogout
   };
 }
