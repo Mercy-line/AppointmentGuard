@@ -31,6 +31,18 @@
 
 AppointmentGuard provides a multi-doctor clinic booking platform (starting with 5 doctors and designed to scale to thousands of doctors and patients). The system enforces strict scheduling integrity, preventing double bookings, respecting working hours and doctor time-offs, supporting dependent minor bookings, and providing atomic rescheduling with zero-loss rollback protection.
 
+### Tech Stack & Languages Summary
+
+| Category | Technology / Tool | Usage & Purpose |
+| :--- | :--- | :--- |
+| **Programming Languages** | **Python 3.11**, **TypeScript / JavaScript**, **HTML5**, **CSS3**, **SQL**, **Bash** | Core backend logic, frontend UI, DB queries, and container scripts |
+| **Backend Framework** | Django 4.2 & Django REST Framework (DRF) | REST APIs, ORM data mapping, authentication, atomic transaction locking |
+| **Frontend Framework** | Next.js 16 (React 19, App Router) | Interactive glassmorphism dashboard, dynamic slot selector, timezone switcher |
+| **Database Engine** | **PostgreSQL 16** (Production/CI) & **SQLite 3** (Local) | Relational storage, partial unique indexing, pessimistic row-level locking |
+| **Containerization** | **Docker** (Non-Root UID 10001) & **Docker Compose** | Containerized web service & database runtime isolation |
+| **CI/CD Pipeline** | **GitHub Actions** ([`ci.yml`](.github/workflows/ci.yml) & [`cd.yml`](.github/workflows/cd.yml)) | Automated Flake8 linting, Pytest test suite, and CD webhook triggers |
+| **Cloud Deployment** | **Render Cloud Platform** | Managed web app container hosting & production PostgreSQL database |
+
 ---
 
 ## 2. Domain Models & Data Architecture
@@ -405,7 +417,7 @@ docker-compose up --build
 ## 9. Section 4: AI Reflection
 
 ### 1. What did you use AI for across the four sections?
-* **Section 1 – System Design**: I used AI to refine the system architecture, validate the relationships between entities (patients, doctors, appointments, working hours, and doctor time-off), and think through business rules such as guardian booking for minors.
+* **Section 1 – System Design**: I used AI to refine the system architecture, validate the relationships between entities (patients, doctors, appointments, working hours, and doctor time-off), 
 * **Section 2 – API Implementation**: I used AI to research how Django's `select_for_update()` works, understand transaction management with `transaction.atomic()`, and implement logic to prevent concurrent double-booking.
 * **Section 3 – Deployment & CI/CD**: I used AI to understand Docker, Docker Compose, and GitHub Actions, configure the CI/CD workflow, automate testing on pull requests, and set up automatic deployment to Render when changes are merged into the production branch.
 * **AI Reflection Summary**: I mainly used AI as a learning and research tool rather than generating complete solutions. I relied on my own notes and understanding when implementing most of the project, using AI to clarify concepts and verify my approach.
