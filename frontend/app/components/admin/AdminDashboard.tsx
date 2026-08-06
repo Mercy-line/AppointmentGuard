@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Activity, Users, User as UserIcon, FileText, Clock, UserPlus } from 'lucide-react';
 import { AdminMetricsOverview } from './AdminMetricsOverview';
 import { PatientDirectory } from './PatientDirectory';
+import { AdminDoctorsDirectory } from './AdminDoctorsDirectory';
 import { AdminTimeOffForm } from './AdminTimeOffForm';
 import type { AppContextType } from '../../hooks/useAppContext';
 
@@ -15,7 +16,7 @@ export const AdminDashboard: React.FC<{ ctx: AppContextType }> = ({ ctx }) => {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
         <h2 style={{ fontSize: '1.4rem', fontWeight: 900, color: '#0f172a', margin: 0 }}>System Administration</h2>
-        <button type="button" className="btn-primary" style={{ borderRadius: '30px', padding: '0.55rem 1.15rem', fontSize: '0.82rem' }} onClick={() => modals.setIsRegisterOpen(true)}>
+        <button type="button" className="btn-primary" style={{ borderRadius: '30px', padding: '0.55rem 1.15rem', fontSize: '0.82rem', width: 'auto' }} onClick={() => modals.setIsRegisterOpen(true)}>
           <UserPlus size={15} /> + Add Patient
         </button>
       </div>
@@ -39,11 +40,12 @@ export const AdminDashboard: React.FC<{ ctx: AppContextType }> = ({ ctx }) => {
       </div>
 
       {tab === 'ADMIN_OVERVIEW' && <AdminMetricsOverview appointments={[]} doctorsList={docs.doctorsList} totalPatientsCount={patients.totalPatientsCount} />}
+      {tab === 'ADMIN_DOCTORS' && <AdminDoctorsDirectory ctx={ctx} />}
       {tab === 'ADMIN_PATIENTS' && <PatientDirectory ctx={ctx} />}
       {tab === 'ADMIN_TIMEOFF' && <AdminTimeOffForm ctx={ctx} />}
-      {(tab === 'ADMIN_DOCTORS' || tab === 'ADMIN_APPOINTMENTS') && (
+      {tab === 'ADMIN_APPOINTMENTS' && (
         <div style={{ background: 'white', padding: '2rem', borderRadius: '16px', border: '1px solid #e2e8f0', textAlign: 'center', color: '#64748b' }}>
-          No records found in admin {tab.toLowerCase().replace('admin_', '')} log.
+          No records found in admin appointment log.
         </div>
       )}
     </div>

@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import type { User } from '../types';
+import { DEFAULT_PATIENTS } from '../data/seededData';
 import { fetchPatientsListAPI } from '../lib/api';
 
 export function usePatients() {
-  const [patientsList, setPatientsList] = useState<User[]>([]);
+  const [patientsList, setPatientsList] = useState<User[]>(DEFAULT_PATIENTS);
   const [patientSearchQuery, setPatientSearchQuery] = useState('');
 
   useEffect(() => {
@@ -21,6 +22,6 @@ export function usePatients() {
 
   return {
     patientsList, setPatientsList, patientSearchQuery, setPatientSearchQuery,
-    filteredPatients, totalPatientsCount: Math.max(patientsList.length, 1)
+    filteredPatients, totalPatientsCount: patientsList.length
   };
 }
