@@ -817,36 +817,38 @@ body {
     padding: 0.85rem 0.35rem;
   }
 
-  /* DASHBOARD BUTTONS ARRANGED SIDE-BY-SIDE IN 1 SINGLE ROW GRID ON MOBILE */
+  /* DASHBOARD BUTTONS SCROLLABLE FLEX ROW ON MOBILE */
   .dashboard-tabs {
-    display: grid !important;
-    grid-template-columns: repeat(3, 1fr) !important;
-    gap: 0.3rem !important;
-    padding: 0.3rem !important;
+    display: flex !important;
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    gap: 0.4rem !important;
+    padding: 0.4rem !important;
     margin-bottom: 1rem !important;
     border-radius: 12px !important;
     background: #ffffff !important;
     width: 100% !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
   }
 
   .dashboard-tabs-2 {
-    grid-template-columns: repeat(2, 1fr) !important;
+    display: flex !important;
   }
 
   .dashboard-tab-btn {
-    width: 100% !important;
-    min-width: 0 !important;
-    padding: 0.5rem 0.2rem !important;
-    font-size: 0.72rem !important;
+    flex: 0 0 auto !important;
+    padding: 0.55rem 0.85rem !important;
+    font-size: 0.78rem !important;
     font-weight: 700 !important;
     border-radius: 8px !important;
     white-space: nowrap !important;
     text-align: center !important;
-    display: flex !important;
+    display: inline-flex !important;
     flex-direction: row !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 0.25rem !important;
+    gap: 0.35rem !important;
   }
 
   .section {
@@ -874,7 +876,6 @@ body {
     font-size: 0.8rem;
     font-weight: 600;
     padding: 0.6rem 0.85rem;
-    width: 100%;
   }
   .search-card {
     padding: 0.85rem;

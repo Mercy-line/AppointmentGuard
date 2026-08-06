@@ -13,3 +13,10 @@ export const DEFAULT_DOCTORS: Doctor[] = [
   { id: '4', name: 'Dr. Diana Atieno', email: 'dr.diana@clinic.com', specialization: 'Dermatology', hours: 'Mon–Fri, 9:00 AM – 5:00 PM', avatarInitials: 'DA', slotDurationMinutes: 30 },
   { id: '5', name: 'Dr. Evans Muyoma', email: 'dr.evans@clinic.com', specialization: 'Orthopedics', hours: 'Mon–Fri, 9:00 AM – 5:00 PM', avatarInitials: 'EM', slotDurationMinutes: 30 },
 ];
+
+export const DEFAULT_PATIENTS: User[] = [
+  { id: 'P101', email: 'john@patient.com', username: 'patient_john', name: 'John Doe', role: 'PATIENT' },
+  { id: 'P102', email: 'mary@patient.com', username: 'patient_mary', name: 'Mary Wanjiku', role: 'PATIENT' },
+  { id: 'P103', email: 'peter@patient.com', username: 'patient_peter', name: 'Peter Otieno', role: 'PATIENT' },
+  { id: 'P104', email: 'grace@patient.com', username: 'patient_grace', name: 'Grace Muthoni', role: 'PATIENT' },
+];
