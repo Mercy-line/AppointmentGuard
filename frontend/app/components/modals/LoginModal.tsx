@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Lock, Eye, EyeOff } from 'lucide-react';
-import type { AppContextType } from '../hooks/useAppContext';
+import type { AppContextType } from '../../hooks/useAppContext';
 
 export const LoginModal: React.FC<{ ctx: AppContextType }> = ({ ctx }) => {
   const { auth, modals } = ctx;

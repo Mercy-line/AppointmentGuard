@@ -2,9 +2,9 @@
 
 import React, { useState } from 'react';
 import { Globe } from 'lucide-react';
-import type { AppContextType } from '../hooks/useAppContext';
-import { TIMEZONE_OPTIONS } from '../data/constants';
-import { getTimezoneBadgeDisplay } from '../lib/slotUtils';
+import type { AppContextType } from '../../hooks/useAppContext';
+import { TIMEZONE_OPTIONS } from '../../data/constants';
+import { getTimezoneBadgeDisplay } from '../../lib/slotUtils';
 
 export const MobileDrawer: React.FC<{ ctx: AppContextType; isOpen: boolean; onClose: () => void }> = ({ ctx, isOpen, onClose }) => {
   const { auth, modals } = ctx;

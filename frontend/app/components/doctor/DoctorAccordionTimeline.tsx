@@ -1,10 +1,10 @@
 'use client';
 
 import React from 'react';
-import { Calendar, Clock, CheckCircle2 } from 'lucide-react';
-import type { Doctor } from '../types';
-import { DEFAULT_TIME_SLOTS } from '../data/constants';
-import { isSlotValidWithAdvanceNotice } from '../lib/slotUtils';
+import { Calendar, Clock } from 'lucide-react';
+import type { Doctor } from '../../types';
+import { DEFAULT_TIME_SLOTS } from '../../data/constants';
+import { isSlotValidWithAdvanceNotice } from '../../lib/slotUtils';
 
 interface Props {
   doc: Doctor;

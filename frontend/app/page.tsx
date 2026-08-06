@@ -2,11 +2,11 @@
 
 import React from 'react';
 import { useAppContext } from './hooks/useAppContext';
-import { Navbar } from './components/Navbar';
-import { LandingView } from './components/LandingView';
-import { DashboardView } from './components/DashboardView';
-import { Footer } from './components/Footer';
-import { ModalsContainer } from './components/ModalsContainer';
+import { Navbar } from './components/layout/Navbar';
+import { LandingView } from './components/landing/LandingView';
+import { DashboardView } from './components/layout/DashboardView';
+import { Footer } from './components/layout/Footer';
+import { ModalsContainer } from './components/modals/ModalsContainer';
 
 export default function HomePage() {
   const ctx = useAppContext();

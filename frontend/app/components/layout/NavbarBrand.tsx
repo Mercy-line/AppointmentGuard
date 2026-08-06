@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Stethoscope } from 'lucide-react';
-import type { AppContextType } from '../hooks/useAppContext';
+import type { AppContextType } from '../../hooks/useAppContext';
 
 export const NavbarBrand: React.FC<{ ctx: AppContextType; onMobileClose?: () => void }> = ({ ctx, onMobileClose }) => {
   const { setCurrentView, auth } = ctx;

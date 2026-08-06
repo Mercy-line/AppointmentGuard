@@ -4,7 +4,7 @@ import React from 'react';
 import { LoginModal } from './LoginModal';
 import { BookingModal } from './BookingModal';
 import { SettingsModal } from './SettingsModal';
-import type { AppContextType } from '../hooks/useAppContext';
+import type { AppContextType } from '../../hooks/useAppContext';
 
 export const ModalsContainer: React.FC<{ ctx: AppContextType }> = ({ ctx }) => (
   <>

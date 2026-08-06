@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Clock } from 'lucide-react';
-import type { Doctor } from '../types';
+import type { Doctor } from '../../types';
 
 export const DoctorCardHeader: React.FC<{ doc: Doctor }> = ({ doc }) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>

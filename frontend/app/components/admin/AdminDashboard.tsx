@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Activity, Users, User as UserIcon, FileText } from 'lucide-react';
 import { AdminMetricsOverview } from './AdminMetricsOverview';
 import { PatientDirectory } from './PatientDirectory';
-import type { AppContextType } from '../hooks/useAppContext';
+import type { AppContextType } from '../../hooks/useAppContext';
 
 export const AdminDashboard: React.FC<{ ctx: AppContextType }> = ({ ctx }) => {
   const [tab, setTab] = useState<'ADMIN_OVERVIEW' | 'ADMIN_DOCTORS' | 'ADMIN_PATIENTS' | 'ADMIN_APPOINTMENTS'>('ADMIN_OVERVIEW');

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import type { AppContextType } from '../hooks/useAppContext';
+import type { AppContextType } from '../../hooks/useAppContext';
 import { LandingHero } from './LandingHero';
 import { LandingServices } from './LandingServices';
 import { LandingHowItWorks } from './LandingHowItWorks';

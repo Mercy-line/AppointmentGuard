@@ -5,7 +5,7 @@ import { Menu, X } from 'lucide-react';
 import { NavbarBrand } from './NavbarBrand';
 import { DesktopNav } from './DesktopNav';
 import { MobileDrawer } from './MobileDrawer';
-import type { AppContextType } from '../hooks/useAppContext';
+import type { AppContextType } from '../../hooks/useAppContext';
 
 export const Navbar: React.FC<{ ctx: AppContextType }> = ({ ctx }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Calendar, AlertCircle } from 'lucide-react';
-import type { AppContextType } from '../hooks/useAppContext';
+import type { AppContextType } from '../../hooks/useAppContext';
 
 export const DoctorDashboard: React.FC<{ ctx: AppContextType }> = ({ ctx }) => {
   const [tab, setTab] = useState<'DOCTOR_QUEUE' | 'DOCTOR_CANCELLED'>('DOCTOR_QUEUE');

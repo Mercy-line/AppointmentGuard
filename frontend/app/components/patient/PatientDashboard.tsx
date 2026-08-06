@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 import { PlusCircle, Calendar, AlertCircle } from 'lucide-react';
-import { LandingDoctors } from './LandingDoctors';
-import type { AppContextType } from '../hooks/useAppContext';
+import { LandingDoctors } from '../landing/LandingDoctors';
+import type { AppContextType } from '../../hooks/useAppContext';
 
 export const PatientDashboard: React.FC<{ ctx: AppContextType }> = ({ ctx }) => {
   const [tab, setTab] = useState<'BOOK_NEW' | 'SCHEDULED' | 'CANCELLED'>('SCHEDULED');

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Users, Calendar, CheckCircle2, AlertCircle } from 'lucide-react';
-import type { Doctor, Appointment } from '../types';
+import type { Doctor, Appointment } from '../../types';
 
 interface Props {
   appointments: Appointment[];

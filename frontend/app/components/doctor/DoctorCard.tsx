@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import type { Doctor } from '../types';
+import type { Doctor } from '../../types';
 import { DoctorCardHeader } from './DoctorCardHeader';
 import { DoctorAccordionTimeline } from './DoctorAccordionTimeline';
 

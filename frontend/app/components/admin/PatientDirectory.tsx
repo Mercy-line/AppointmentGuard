@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Search, User as UserIcon } from 'lucide-react';
-import type { AppContextType } from '../hooks/useAppContext';
+import type { AppContextType } from '../../hooks/useAppContext';
 
 export const PatientDirectory: React.FC<{ ctx: AppContextType }> = ({ ctx }) => {
   const { patients } = ctx;

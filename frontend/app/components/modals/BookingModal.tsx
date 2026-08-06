@@ -2,9 +2,9 @@
 
 import React, { useState } from 'react';
 import { Calendar } from 'lucide-react';
-import type { AppContextType } from '../hooks/useAppContext';
-import { DEFAULT_TIME_SLOTS } from '../data/constants';
-import { getTodayDateStr, isSlotValidWithAdvanceNotice } from '../lib/slotUtils';
+import type { AppContextType } from '../../hooks/useAppContext';
+import { DEFAULT_TIME_SLOTS } from '../../data/constants';
+import { getTodayDateStr, isSlotValidWithAdvanceNotice } from '../../lib/slotUtils';
 
 export const BookingModal: React.FC<{ ctx: AppContextType }> = ({ ctx }) => {
   const { modals, docs } = ctx;

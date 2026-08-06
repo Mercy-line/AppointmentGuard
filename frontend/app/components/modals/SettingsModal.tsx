@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Settings, Key } from 'lucide-react';
-import type { AppContextType } from '../hooks/useAppContext';
+import type { AppContextType } from '../../hooks/useAppContext';
 
 export const SettingsModal: React.FC<{ ctx: AppContextType }> = ({ ctx }) => {
   const { modals, auth } = ctx;

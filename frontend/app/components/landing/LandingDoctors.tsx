@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import type { AppContextType } from '../hooks/useAppContext';
-import { DoctorCard } from './DoctorCard';
-import { getTodayDateStr } from '../lib/slotUtils';
+import type { AppContextType } from '../../hooks/useAppContext';
+import { DoctorCard } from '../doctor/DoctorCard';
+import { getTodayDateStr } from '../../lib/slotUtils';
 
 export const LandingDoctors: React.FC<{ ctx: AppContextType }> = ({ ctx }) => {
   const { docs, modals } = ctx;

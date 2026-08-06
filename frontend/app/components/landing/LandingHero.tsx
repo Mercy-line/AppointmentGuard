@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Calendar, Shield, Clock, Heart } from 'lucide-react';
-import type { AppContextType } from '../hooks/useAppContext';
+import type { AppContextType } from '../../hooks/useAppContext';
 
 export const LandingHero: React.FC<{ ctx: AppContextType }> = ({ ctx }) => {
   const { modals } = ctx;

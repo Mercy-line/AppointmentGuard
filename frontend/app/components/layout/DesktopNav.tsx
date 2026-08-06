@@ -2,9 +2,9 @@
 
 import React, { useState } from 'react';
 import { Globe } from 'lucide-react';
-import type { AppContextType } from '../hooks/useAppContext';
-import { TIMEZONE_OPTIONS } from '../data/constants';
-import { getTimezoneBadgeDisplay } from '../lib/slotUtils';
+import type { AppContextType } from '../../hooks/useAppContext';
+import { TIMEZONE_OPTIONS } from '../../data/constants';
+import { getTimezoneBadgeDisplay } from '../../lib/slotUtils';
 
 export const DesktopNav: React.FC<{ ctx: AppContextType }> = ({ ctx }) => {
   const { auth, modals, currentView, setCurrentView } = ctx;

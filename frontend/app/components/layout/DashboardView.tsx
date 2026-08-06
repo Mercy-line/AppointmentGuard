@@ -1,10 +1,10 @@
 'use client';
 
 import React from 'react';
-import { PatientDashboard } from './PatientDashboard';
-import { DoctorDashboard } from './DoctorDashboard';
-import { AdminDashboard } from './AdminDashboard';
-import type { AppContextType } from '../hooks/useAppContext';
+import { PatientDashboard } from '../patient/PatientDashboard';
+import { DoctorDashboard } from '../doctor/DoctorDashboard';
+import { AdminDashboard } from '../admin/AdminDashboard';
+import type { AppContextType } from '../../hooks/useAppContext';
 
 export const DashboardView: React.FC<{ ctx: AppContextType }> = ({ ctx }) => {
   const { auth } = ctx;
