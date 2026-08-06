@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Calendar } from 'lucide-react';
 import type { AppContextType } from '../../hooks/useAppContext';
 import { DEFAULT_TIME_SLOTS } from '../../data/constants';
-import { getTodayDateStr, isSlotValidWithAdvanceNotice } from '../../lib/slotUtils';
+import { getTodayDateStr, isSlotValidWithAdvanceNotice, isSlotBooked } from '../../lib/slotUtils';
 
 export const BookingModal: React.FC<{ ctx: AppContextType }> = ({ ctx }) => {
   const { modals, docs } = ctx;
@@ -13,6 +13,7 @@ export const BookingModal: React.FC<{ ctx: AppContextType }> = ({ ctx }) => {
 
   if (!modals.isBookOpen) return null;
   const activeDoc = docs.doctorsList.find(d => d.id === docs.selectedDoctorId) || docs.doctorsList[0];
+  const openSlots = DEFAULT_TIME_SLOTS.filter(s => !isSlotBooked(activeDoc?.id || '', selectedDate, s.time, []));
 
   const handleBooking = (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,12 +44,10 @@ export const BookingModal: React.FC<{ ctx: AppContextType }> = ({ ctx }) => {
           <div style={{ marginBottom: '1rem' }}>
             <label className="form-label">Select 30-Min Time Slot</label>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))', gap: '0.4rem' }}>
-              {DEFAULT_TIME_SLOTS.map(slot => {
+              {openSlots.map(slot => {
                 const isValid = isSlotValidWithAdvanceNotice(slot.time, selectedDate);
                 const isSel = selectedSlot === slot.time;
-                return (
-                  <button type="button" key={slot.time} disabled={!isValid} onClick={() => isValid && setSelectedSlot(slot.time)} style={{ padding: '0.4rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 600, border: `1px solid ${isSel ? '#0284c7' : '#e2e8f0'}`, background: isSel ? '#e0f2fe' : isValid ? 'white' : '#f1f5f9', color: isSel ? '#0369a1' : isValid ? '#334155' : '#94a3b8', cursor: isValid ? 'pointer' : 'not-allowed', opacity: isValid ? 1 : 0.5 }}>{slot.time}</button>
-                );
+                return <button type="button" key={slot.time} disabled={!isValid} onClick={() => isValid && setSelectedSlot(slot.time)} style={{ padding: '0.4rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 600, border: `1px solid ${isSel ? '#0284c7' : '#e2e8f0'}`, background: isSel ? '#e0f2fe' : isValid ? 'white' : '#f1f5f9', color: isSel ? '#0369a1' : isValid ? '#334155' : '#94a3b8', cursor: isValid ? 'pointer' : 'not-allowed', opacity: isValid ? 1 : 0.5 }}>{slot.time}</button>;
               })}
             </div>
           </div>
