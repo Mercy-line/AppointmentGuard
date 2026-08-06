@@ -4,6 +4,7 @@ import React from 'react';
 import { LoginModal } from './LoginModal';
 import { BookingModal } from './BookingModal';
 import { SettingsModal } from './SettingsModal';
+import { RegisterModal } from './RegisterModal';
 import type { AppContextType } from '../../hooks/useAppContext';
 
 export const ModalsContainer: React.FC<{ ctx: AppContextType }> = ({ ctx }) => (
@@ -11,5 +12,6 @@ export const ModalsContainer: React.FC<{ ctx: AppContextType }> = ({ ctx }) => (
     <LoginModal ctx={ctx} />
     <BookingModal ctx={ctx} />
     <SettingsModal ctx={ctx} />
+    <RegisterModal ctx={ctx} />
   </>
 );
