@@ -23,6 +23,7 @@
 6. [API Architecture & Endpoints](#6-api-architecture--endpoints)
 7. [Deployment, Containerization & CI/CD Architecture](#7-deployment-containerization--cicd-architecture)
 8. [How to Run Locally (Local Setup Guide)](#8-how-to-run-locally-local-setup-guide)
+9. [Section 4: AI Reflection](#9-section-4-ai-reflection)
 
 ---
 
@@ -398,4 +399,53 @@ docker-compose up --build
 | **Patient** | `john@patient.com` | `PatientPass123!` | Book 30-min slots, view scheduled/cancelled visits |
 | **Doctor** | `dr.alice@clinic.com` | `DoctorPass123!` | View active patient queue, schedule emergency time-offs |
 | **Admin** | `admin@appointmentguard.com` | `AdminPass123!` | View metrics, search patient registry, manage users |
+
+---
+
+## 9. Section 4: AI Reflection
+
+### 1. What did you use AI for across the four sections?
+* **Section 1 – System Design**: I used AI to refine the system architecture, validate the relationships between entities (patients, doctors, appointments, working hours, and doctor time-off), and think through business rules such as guardian booking for minors.
+* **Section 2 – API Implementation**: I used AI to research how Django's `select_for_update()` works, understand transaction management with `transaction.atomic()`, and implement logic to prevent concurrent double-booking.
+* **Section 3 – Deployment & CI/CD**: I used AI to understand Docker, Docker Compose, and GitHub Actions, configure the CI/CD workflow, automate testing on pull requests, and set up automatic deployment to Render when changes are merged into the production branch.
+* **AI Reflection Summary**: I mainly used AI as a learning and research tool rather than generating complete solutions. I relied on my own notes and understanding when implementing most of the project, using AI to clarify concepts and verify my approach.
+
+---
+
+### 2. Give one example where an AI suggestion improved your work. What did you prompt it with?
+
+* **Prompt**:
+  > *"How can I improve the login experience when the backend server is unavailable or responding slowly?"*
+
+* **How it helped**:
+  AI suggested using an `AbortController` with a timeout so that login requests would fail quickly instead of waiting for the browser's default timeout. I also added a loading state to provide immediate feedback while authentication was in progress. This made the login experience more responsive, especially when the backend was unavailable.
+
+---
+
+### 3. Give one example where AI output was wrong or incomplete and how you caught it.
+
+An AI-generated solution assumed that my login API returned a nested response like:
+
+```json
+{
+  "user": {
+    ...
+  }
+}
+```
+
+After reviewing my Django `LoginAPIView`, I realized the API actually returned a flat response containing fields such as `id`, `email`, `username`, and `role`. Because of this, the frontend was trying to access `data.user`, which was `undefined`. I corrected the frontend to map the fields directly from the root response and confirmed that authentication worked correctly.
+
+---
+
+### 4. Name two decisions you made without AI. Why did you trust your own judgment there?
+
+* **Decision 1: Backend enforcement of minor guardian booking**
+  * I decided to enforce the rule that patients under 18 must be linked to a valid parent or guardian account before an appointment can be created.
+  * **Why**: This business rule is fundamental to the clinic's requirements and ensures that appointments for minors are always booked under the supervision of a responsible adult. I trusted my judgment because this validation belongs in the backend, where it cannot be bypassed through client-side changes.
+
+* **Decision 2: Timezone selection**
+  * I decided to store all appointment times in UTC while allowing users to choose their preferred timezone when viewing appointments.
+  * **Why**: Keeping a single UTC standard in the backend prevents inconsistencies across different regions, while allowing timezone selection in the user interface ensures appointments are displayed in each user's local time. I trusted this approach because it separates data storage from presentation, making the system more reliable and easier to maintain.
+
 
